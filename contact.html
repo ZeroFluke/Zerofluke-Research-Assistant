@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — ZeroFluke Research Assistant</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="contact">
+
+<div data-include="partials/header.html"></div>
+
+<section class="hero" style="padding-block:3.5rem 4.5rem;">
+  <div class="container hero-inner">
+    <span class="eyebrow">Contact</span>
+    <h1 style="font-size:var(--step-3);">Questions, complaints, or an ID appeal — this is the way in.</h1>
+    <p class="lead">Messages sent here land directly in our inbox and get a personal reply — no ticket queue.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="grid grid-3">
+      <div class="card" style="grid-column: span 2;">
+        <h3 class="mt-0">Send a message</h3>
+        <form id="contactForm">
+          <div class="field">
+            <label for="cf-name">Full name</label>
+            <input type="text" id="cf-name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="cf-email">Email address</label>
+            <input type="email" id="cf-email" name="email" required>
+          </div>
+          <div class="field">
+            <label for="cf-topic">What is this about?</label>
+            <select id="cf-topic" name="topic">
+              <option>General question</option>
+              <option>Order status/complaint</option>
+              <option>ID verification appeal</option>
+              <option>Refund request</option>
+              <option>Something else</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cf-message">Message</label>
+            <textarea id="cf-message" name="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+          <p class="field-hint" id="cf-status"></p>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 class="mt-0">Prefer email?</h3>
+        <p>You can also write directly to us — replies typically arrive within 1–2 business days.</p>
+        <p style="font-weight:600;color:var(--deep-navy);">support@zerofluke.com</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div data-include="partials/footer.html"></div>
+<script src="js/main.js"></script>
+<script>
+  // Placeholder handler — wired to Apps Script MailApp in a later phase.
+  document.getElementById("contactForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("cf-status").textContent =
+      "Form submission will be connected to email routing in the next build phase.";
+  });
+</script>
+</body>
+</html>

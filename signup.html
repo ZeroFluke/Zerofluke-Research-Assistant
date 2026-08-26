@@ -3,29 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Signup | ZeroFluke Research Assistant</title>
+<title>Sign Up | ZeroFluke Research Assistant</title>
 <link rel="icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body data-page="signup">
 
 <div data-include="partials/header.html"></div>
 
-<section class="section" style="min-height:50vh;display:flex;align-items:center;">
-  <div class="container text-center">
-    <span class="eyebrow" style="color:var(--royal-blue);">Coming soon</span>
-    <h1>This page is being built in the next phase.</h1>
-    <p style="max-width:46ch;margin-inline:auto;">
-      The signup flow, including ID verification, the pricing
-      engine, and dashboard access, is scoped and ready to build next.
-    </p>
-    <a href="index.html" class="btn btn-outline-dark" style="margin-top:1rem;">Back to Home</a>
+<section class="section" style="padding-block:3rem;">
+  <div class="container">
+    <div class="auth-card">
+      <h1 style="font-size:var(--step-2);text-align:center;margin-bottom:0.4rem;">Create your account</h1>
+      <p style="text-align:center;font-size:0.9rem;margin-bottom:1.5rem;">You'll need your NIN to place a request.</p>
+
+      <div id="statusBox" class="status-box"></div>
+
+      <div class="google-btn-wrap" id="googleBtnWrap"></div>
+      <div class="auth-divider">or sign up with email</div>
+
+      <form id="signupForm">
+        <div class="field">
+          <label for="su-name">Full name</label>
+          <input type="text" id="su-name" required>
+        </div>
+        <div class="field">
+          <label for="su-email">Email address</label>
+          <input type="email" id="su-email" required>
+        </div>
+        <div class="field">
+          <label for="su-phone">Phone number</label>
+          <input type="tel" id="su-phone" required>
+        </div>
+        <div class="field">
+          <label for="su-password">Password</label>
+          <input type="password" id="su-password" required minlength="8">
+          <p class="field-hint">At least 8 characters, with a letter and a number.</p>
+        </div>
+        <div class="field">
+          <label for="su-nin">NIN (11 digits)</label>
+          <input type="text" id="su-nin" required maxlength="11" pattern="\d{11}" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label>Upload your NIN (digital slip or paper slip)</label>
+          <label class="file-upload" id="fileUploadLabel">
+            <input type="file" id="su-id-photo" accept="image/*" required>
+            <div class="file-upload-label">Tap to choose a clear photo of your NIN</div>
+            <div class="file-upload-name" id="fileUploadName"></div>
+          </label>
+          <p class="field-hint" id="ocrStatus"></p>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="submitBtn">Create Account</button>
+      </form>
+
+      <p class="text-center field-hint" style="margin-top:1.25rem;">
+        Already have an account? <a href="login.html" style="color:var(--royal-blue);font-weight:600;">Log in</a>
+      </p>
+    </div>
   </div>
 </section>
 
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
+<script src="js/signup.js"></script>
 </body>
 </html>

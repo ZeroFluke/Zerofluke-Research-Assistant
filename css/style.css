@@ -219,10 +219,23 @@ textarea:focus-visible, select:focus-visible {
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
-  background: var(--brand-gradient);
   color: var(--paper);
   overflow: hidden;
-  padding-block: 4.5rem 6rem;
+  padding-block: 5.5rem 6.5rem;
+}
+.hero-bg-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(18,24,74,0.92) 0%, rgba(46,63,209,0.82) 48%, rgba(18,24,74,0.55) 100%);
+  z-index: 1;
 }
 .hero::after {
   /* signature zig, a faint echo of the Z mark, oversized and off-frame */
@@ -236,27 +249,7 @@ textarea:focus-visible, select:focus-visible {
               linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.08) 61%, rgba(255,255,255,0.08) 64%, transparent 65%);
   pointer-events: none;
 }
-.hero-inner { position: relative; max-width: 720px; }
-.hero-grid {
-  position: relative;
-  display: grid;
-  gap: 2.5rem;
-  align-items: center;
-  grid-template-columns: 1fr;
-}
-.hero-grid .hero-inner { max-width: none; }
-.hero-photo-wrap { position: relative; }
-.hero-photo {
-  width: 100%;
-  height: auto;
-  border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(6, 10, 40, 0.45);
-  border: 1px solid rgba(255,255,255,0.14);
-  display: block;
-}
-@media (min-width: 900px) {
-  .hero-grid { grid-template-columns: 1.05fr 0.95fr; }
-}
+.hero-inner { position: relative; z-index: 2; max-width: 720px; }
 .section-photo {
   width: 100%;
   height: 100%;
@@ -271,6 +264,12 @@ textarea:focus-visible, select:focus-visible {
   overflow: hidden;
 }
 .img-placeholder.has-photo span { display: none; }
+.photo-caption {
+  text-align: center;
+  max-width: 46ch;
+  margin: 1.5rem auto 0;
+}
+.photo-caption .kicker { display: block; margin-bottom: 0.4rem; }
 .eyebrow {
   display: inline-flex;
   align-items: center;

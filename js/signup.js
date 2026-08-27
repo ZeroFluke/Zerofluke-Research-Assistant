@@ -114,13 +114,21 @@ async function runOcrCheck(file, fullName, nin) {
   const templateFragments = ["NIGERIA", "IDENTIFICATION", "IDENTITY", "NIMC", "NIN"];
   const templateMatch = templateFragments.filter((f) => text.includes(f)).length >= 2;
 
-  const signalsPassed = [ninMatch, nameMatch, templateMatch].filter(Boolean).length;
-  idCheckPassed = signalsPassed >= 2;
+  // templateMatch only confirms this is *a* NIN document (these words appear on
+  // every NIN card, real or not). It can never substitute for the NIN or name
+  // actually matching this specific person, so it is a gate, not a vote.
+  // ninMatch and nameMatch are both mandatory: the number and name typed must
+  // actually be readable on the card uploaded.
+  idCheckPassed = templateMatch && ninMatch && nameMatch;
 
   if (idCheckPassed) {
     ocrStatus.textContent = "ID looks good.";
+  } else if (!templateMatch) {
+    ocrStatus.textContent = "This doesn't look like a NIN card. Please upload a clear photo of your NIN slip or card.";
+  } else if (!ninMatch) {
+    ocrStatus.textContent = "The NIN number entered doesn't match what we can read on the card. Please check both and try again.";
   } else {
-    ocrStatus.textContent = "We couldn't verify this ID. Make sure the name and NIN match what you entered, and the photo is clear and well lit.";
+    ocrStatus.textContent = "The name entered doesn't match what we can read on the card. Please check both and try again.";
   }
 
   return idCheckPassed;

@@ -250,6 +250,12 @@ textarea:focus-visible, select:focus-visible {
   pointer-events: none;
 }
 .hero-inner { position: relative; z-index: 2; max-width: 720px; }
+
+/* For page-top heroes with no background photo (Contact, Services, About).
+   Without this, white hero text sits on the plain white page background
+   and disappears. This applies the same brand-gradient the photo hero's
+   overlay uses, so the text stays legible. */
+.hero-plain { background: var(--brand-gradient); }
 .section-photo {
   width: 100%;
   height: 100%;
@@ -299,6 +305,33 @@ textarea:focus-visible, select:focus-visible {
   margin-bottom: 2rem;
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+
+/* ---------- How it works, on photo ---------- */
+/* Reuses the hero's photo + dark-gradient-overlay pattern so the write-up
+   sits directly on the team photo instead of as a separate captioned image. */
+.how-it-works-photo {
+  position: relative;
+  overflow: hidden;
+  color: var(--paper);
+  padding-block: 4.5rem;
+}
+.hiw-bg-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+.hiw-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(18,24,74,0.94) 0%, rgba(18,24,74,0.88) 45%, rgba(46,63,209,0.82) 100%);
+  z-index: 1;
+}
+.hiw-inner { position: relative; z-index: 2; }
+.how-it-works-photo .section-head .kicker { color: var(--sky-blue); }
+.how-it-works-photo .section-head h2 { color: var(--paper); }
 
 /* ---------- Sections ---------- */
 .section { padding-block: 4.5rem; }

@@ -46,25 +46,46 @@ async function runOcrCheck(file, fullName, nin) {
 
   const result = await Tesseract.recognize(file, "eng");
   const text = result.data.text.toUpperCase();
+  const textDigitsOnly = text.replace(/\D/g, "");
 
   const ninDigitsOnly = nin.replace(/\D/g, "");
-  const textDigitsOnly = text.replace(/\D/g, "");
-  const ninMatch = textDigitsOnly.includes(ninDigitsOnly);
+  const ninMatch = fuzzyDigitMatch(textDigitsOnly, ninDigitsOnly);
 
   const nameWords = fullName.toUpperCase().split(/\s+/).filter((w) => w.length >= 3);
   const nameMatch = nameWords.some((w) => text.includes(w));
 
-  const templateMatch = TEMPLATE_KEYWORDS.some((k) => text.includes(k));
+  const templateFragments = ["NIGERIA", "IDENTIFICATION", "IDENTITY", "NIMC", "NIN"];
+  const templateMatch = templateFragments.filter((f) => text.includes(f)).length >= 2;
 
-  idCheckPassed = ninMatch && nameMatch && templateMatch;
+  const signalsPassed = [ninMatch, nameMatch, templateMatch].filter(Boolean).length;
+  idCheckPassed = signalsPassed >= 2;
 
   if (idCheckPassed) {
     ocrStatus.textContent = "ID looks good.";
   } else {
-    ocrStatus.textContent = "We couldn't verify this ID. Make sure the name and NIN match what you entered, and the photo is clear.";
+    ocrStatus.textContent = "We couldn't verify this ID. Make sure the name and NIN match what you entered, and the photo is clear and well lit.";
   }
 
   return idCheckPassed;
+}
+
+function fuzzyDigitMatch(haystack, needle) {
+  if (haystack.includes(needle)) {
+    return true;
+  }
+  if (needle.length < 8) {
+    return false;
+  }
+  let bestMatchLength = 0;
+  for (let start = 0; start <= needle.length - 6; start++) {
+    for (let len = needle.length - start; len >= 6; len--) {
+      const chunk = needle.substring(start, start + len);
+      if (haystack.includes(chunk) && len > bestMatchLength) {
+        bestMatchLength = len;
+      }
+    }
+  }
+  return bestMatchLength >= Math.floor(needle.length * 0.7);
 }
 
 document.getElementById("su-id-photo").addEventListener("change", function (e) {
@@ -77,6 +98,19 @@ document.getElementById("su-id-photo").addEventListener("change", function (e) {
 document.getElementById("signupForm").addEventListener("submit", async function (e) {
   e.preventDefault();
   clearStatus();
+
+  try {
+    await handleSignupSubmit();
+  } catch (err) {
+    const submitBtn = document.getElementById("submitBtn");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Create Account";
+    showStatus("Something went wrong: " + err.message + ". Please try again.", "error");
+    console.error(err);
+  }
+});
+
+async function handleSignupSubmit() {
 
   const fullName = document.getElementById("su-name").value.trim();
   const email = document.getElementById("su-email").value.trim();
@@ -170,40 +204,45 @@ document.getElementById("signupForm").addEventListener("submit", async function 
   } else {
     showStatus(signupResult.error, "error");
   }
-});
+}
 
 function handleGoogleCredentialResponse(response) {
   clearStatus();
   showStatus("Verifying your Google account...", "info");
 
-  callBackend({ action: "googleAuth", idToken: response.credential }).then((result) => {
-    if (!result.success) {
-      showStatus(result.error, "error");
-      return;
-    }
+  callBackend({ action: "googleAuth", idToken: response.credential })
+    .then((result) => {
+      if (!result.success) {
+        showStatus(result.error, "error");
+        return;
+      }
 
-    if (result.isNewUser) {
-      showStatus(
-        "Almost done, " + result.fullName + ". Please fill in your NIN and upload your ID below to finish signing up.",
-        "info"
-      );
-      document.getElementById("su-name").value = result.fullName;
-      document.getElementById("su-email").value = result.email;
-      document.getElementById("su-name").readOnly = true;
-      document.getElementById("su-email").readOnly = true;
-      document.getElementById("su-password").closest(".field").style.display = "none";
-      document.getElementById("su-password").required = false;
-      window.pendingGoogleSignup = true;
-    } else {
-      localStorage.setItem("zf_clientId", result.clientId);
-      localStorage.setItem("zf_fullName", result.fullName);
-      localStorage.setItem("zf_email", result.email);
-      showStatus("Welcome back, " + result.fullName + ". Redirecting...", "success");
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1000);
-    }
-  });
+      if (result.isNewUser) {
+        showStatus(
+          "Almost done, " + result.fullName + ". Please fill in your NIN and upload your ID below to finish signing up.",
+          "info"
+        );
+        document.getElementById("su-name").value = result.fullName;
+        document.getElementById("su-email").value = result.email;
+        document.getElementById("su-name").readOnly = true;
+        document.getElementById("su-email").readOnly = true;
+        document.getElementById("su-password").closest(".field").style.display = "none";
+        document.getElementById("su-password").required = false;
+        window.pendingGoogleSignup = true;
+      } else {
+        localStorage.setItem("zf_clientId", result.clientId);
+        localStorage.setItem("zf_fullName", result.fullName);
+        localStorage.setItem("zf_email", result.email);
+        showStatus("Welcome back, " + result.fullName + ". Redirecting...", "success");
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 1000);
+      }
+    })
+    .catch((err) => {
+      showStatus("Something went wrong verifying your Google account: " + err.message, "error");
+      console.error(err);
+    });
 }
 
 window.addEventListener("load", function () {

@@ -237,6 +237,40 @@ textarea:focus-visible, select:focus-visible {
   pointer-events: none;
 }
 .hero-inner { position: relative; max-width: 720px; }
+.hero-grid {
+  position: relative;
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  grid-template-columns: 1fr;
+}
+.hero-grid .hero-inner { max-width: none; }
+.hero-photo-wrap { position: relative; }
+.hero-photo {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(6, 10, 40, 0.45);
+  border: 1px solid rgba(255,255,255,0.14);
+  display: block;
+}
+@media (min-width: 900px) {
+  .hero-grid { grid-template-columns: 1.05fr 0.95fr; }
+}
+.section-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+.img-placeholder.has-photo {
+  padding: 0;
+  border: none;
+  background: none;
+  overflow: hidden;
+}
+.img-placeholder.has-photo span { display: none; }
 .eyebrow {
   display: inline-flex;
   align-items: center;

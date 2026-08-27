@@ -40,11 +40,68 @@ function fileToBase64(file) {
   });
 }
 
+// Converts the raw uploaded photo to a cleaned-up grayscale, contrast-boosted
+// version before OCR. Tesseract reads printed ID text far more reliably off
+// this than off a raw, full-color phone photo (glare, colored background,
+// small text all hurt accuracy otherwise).
+function preprocessImageForOcr(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Cap max dimension so very large phone photos don't slow Tesseract down,
+      // but upscale small/cropped images so text is still readable.
+      const maxDim = 1600;
+      let { width, height } = img;
+      const scale = Math.min(maxDim / Math.max(width, height), 1) || 1;
+      const targetW = Math.round(width * (width > maxDim ? scale : 1));
+      const targetH = Math.round(height * (height > maxDim ? scale : 1));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = targetW || width;
+      canvas.height = targetH || height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const contrast = 1.35; // mild boost, keeps genuine text edges crisp
+
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        const adjusted = (gray - 128) * contrast + 128;
+        const clamped = Math.max(0, Math.min(255, adjusted));
+        data[i] = data[i + 1] = data[i + 2] = clamped;
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Could not process image."));
+        }
+      }, "image/jpeg", 0.95);
+    };
+    img.onerror = () => reject(new Error("Could not load image for processing."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 async function runOcrCheck(file, fullName, nin) {
   const ocrStatus = document.getElementById("ocrStatus");
   ocrStatus.textContent = "Checking your ID, this can take a few seconds...";
 
-  const result = await Tesseract.recognize(file, "eng");
+  let ocrInput = file;
+  try {
+    ocrInput = await preprocessImageForOcr(file);
+  } catch (err) {
+    // If preprocessing fails for any reason, fall back to the raw file
+    // rather than blocking signup entirely.
+    console.warn("Image preprocessing failed, using original photo:", err);
+    ocrInput = file;
+  }
+
+  const result = await Tesseract.recognize(ocrInput, "eng");
   const text = result.data.text.toUpperCase();
   const textDigitsOnly = text.replace(/\D/g, "");
 

@@ -9,6 +9,7 @@ if (!zfClientId) {
 let currentOrders = [];
 let currentEmail = localStorage.getItem("zf_email") || "";
 let revisitFee = 0;
+let currentFilter = "All";
 
 function callBackend(payload) {
   return fetch(BACKEND_URL, {
@@ -87,12 +88,35 @@ async function loadDashboard() {
 
     document.getElementById("welcomeHeading").textContent = "Welcome back, " + result.fullName.split(" ")[0];
 
-    renderOrders(currentOrders);
+    if (currentOrders.length) {
+      document.getElementById("filterRow").style.display = "flex";
+    }
+
+    renderOrders(getFilteredOrders());
   } catch (err) {
     container.innerHTML = '<div class="dashboard-empty"><p>Could not load your dashboard right now. Please refresh.</p></div>';
     console.error(err);
   }
 }
+
+function orderTimestamp(orderId) {
+  return Number(String(orderId).replace(/^OR/, "")) || 0;
+}
+
+function getFilteredOrders() {
+  const sorted = [...currentOrders].sort((a, b) => orderTimestamp(b.orderId) - orderTimestamp(a.orderId));
+  if (currentFilter === "All") return sorted;
+  return sorted.filter((o) => o.orderStatus === currentFilter);
+}
+
+document.querySelectorAll(".filter-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    currentFilter = tab.dataset.filter;
+    document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    renderOrders(getFilteredOrders());
+  });
+});
 
 function renderOrders(orders) {
   const container = document.getElementById("ordersContainer");

@@ -375,6 +375,21 @@ textarea:focus-visible, select:focus-visible {
 .status-pill.completed { background: #eaf6ef; color: var(--success); }
 .status-pill.cancelled { background: #fdeceb; color: var(--danger); }
 
+.filter-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+.filter-tab {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.filter-tab:hover { border-color: var(--royal-blue); color: var(--royal-blue); }
+.filter-tab.active { background: var(--royal-blue); border-color: var(--royal-blue); color: var(--paper); }
+
 .order-card {
   background: var(--paper);
   border: 1px solid var(--line);

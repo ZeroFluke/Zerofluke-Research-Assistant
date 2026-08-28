@@ -535,6 +535,37 @@ textarea:focus-visible, select:focus-visible {
 }
 .field-hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.35rem; }
 
+/* ---------- FAQ accordion ---------- */
+.faq-category { margin-bottom: 2.25rem; }
+.faq-category h2 { font-size: var(--step-1); margin-bottom: 0.6rem; }
+.faq-item { border-bottom: 1px solid var(--line); }
+.faq-question {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--deep-navy);
+  padding: 0.9rem 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.faq-question .faq-caret { transition: transform 0.15s ease; flex-shrink: 0; color: var(--royal-blue); }
+.faq-item.open .faq-question .faq-caret { transform: rotate(180deg); }
+.faq-answer {
+  display: none;
+  padding: 0 0 1rem 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.faq-item.open .faq-answer { display: block; }
+
 /* Info icon + popover, used where a field needs an explanation without
    permanently taking up space under the input (e.g. revisits, deadline). */
 .field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }

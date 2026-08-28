@@ -179,6 +179,7 @@ function buildOrderCardHtml(order) {
       '<div class="payment-wait-area topup-wait-area"></div>' +
       '<div class="order-actions">' +
       '<button class="btn btn-ghost" data-action="satisfactory" style="color:var(--deep-navy);border-color:var(--line);">Mark as Satisfactory</button>' +
+      '<button class="btn btn-ghost" data-action="request-update" style="color:var(--royal-blue);border-color:var(--line);">Request Update</button>' +
       (Number(order.amountPaidSoFar) > 0
         ? '<button class="btn btn-ghost" data-action="withdraw" style="color:var(--danger);border-color:var(--line);">Withdraw / Request Refund</button>'
         : "") +
@@ -238,6 +239,12 @@ function wireOrderCard(order) {
   const withdrawBtn = card.querySelector('[data-action="withdraw"]');
   if (withdrawBtn) {
     withdrawBtn.addEventListener("click", () => withdrawOrder(order.orderId));
+  }
+
+  // Request an update (reuses the complaints system, prefilled)
+  const requestUpdateBtn = card.querySelector('[data-action="request-update"]');
+  if (requestUpdateBtn) {
+    requestUpdateBtn.addEventListener("click", () => requestOrderUpdate(order.orderId));
   }
 
   // Revisit upload form
@@ -439,9 +446,31 @@ async function cancelOrder(orderId) {
   loadDashboard();
 }
 
+async function requestOrderUpdate(orderId) {
+  clearStatus();
+  if (!confirm("Send a request for an update on order " + orderId + "? Our team will reply by email.")) return;
+
+  try {
+    const result = await callBackend({
+      action: "submitComplaint",
+      name: localStorage.getItem("zf_fullName") || "",
+      email: localStorage.getItem("zf_email") || "",
+      topic: "Order status/complaint",
+      relatedOrderId: orderId,
+      message: "I'd like an update on the progress of this order."
+    });
+    if (result.success) {
+      showStatus("Update request sent. We'll reply by email soon.", "success");
+    } else {
+      showStatus(result.error, "error");
+    }
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+  }
+}
+
 async function withdrawOrder(orderId) {
   clearStatus();
-  if (!confirm("Withdraw and request a refund for this order? A deduction applies, and this only works within the refund window.")) return;
 
   try {
     const result = await callBackend({ action: "requestRefund", orderId: orderId, clientId: zfClientId });

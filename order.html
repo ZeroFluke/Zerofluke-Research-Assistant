@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Order | ZeroFluke Research Assistant</title>
+<title>Place a Request | ZeroFluke Research Assistant</title>
 <link rel="icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,21 +11,100 @@
 </head>
 <body data-page="order">
 
-<div data-include="partials/header.html"></div>
+<div data-include="partials/header-app.html"></div>
 
-<section class="section" style="min-height:50vh;display:flex;align-items:center;">
-  <div class="container text-center">
-    <span class="eyebrow" style="color:var(--royal-blue);">Coming soon</span>
-    <h1>This page is being built in the next phase.</h1>
-    <p style="max-width:46ch;margin-inline:auto;">
-      The order flow, including ID verification, the pricing
-      engine, and dashboard access, is scoped and ready to build next.
-    </p>
-    <a href="index.html" class="btn btn-outline-dark" style="margin-top:1rem;">Back to Home</a>
+<section class="section" style="padding-block:2.5rem;">
+  <div class="container" style="max-width:760px;">
+
+    <h1 style="font-size:var(--step-2);margin-bottom:0.2rem;">Place a new request</h1>
+    <p class="field-hint" style="margin-bottom:1.5rem;">Pricing updates as you fill this in. Nothing is charged until you confirm on your dashboard.</p>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div id="formLoading" class="dashboard-empty"><p>Loading pricing...</p></div>
+
+    <form id="orderForm" style="display:none;">
+
+      <div class="field">
+        <label for="ord-level">Academic level</label>
+        <select id="ord-level" required>
+          <option value="Article">Article (journal, peer-reviewed)</option>
+          <option value="Undergraduate">Undergraduate Project</option>
+          <option value="Masters">Masters</option>
+          <option value="PhD">PhD</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="ord-field">Field / programme</label>
+        <input type="text" id="ord-field" placeholder="e.g. Computer Science" required>
+      </div>
+
+      <div class="field">
+        <label for="ord-topic">Research topic</label>
+        <input type="text" id="ord-topic" placeholder="Your working title or topic" required>
+      </div>
+
+      <div class="field">
+        <label for="ord-institution">Institution <span style="font-weight:400;color:var(--ink-soft);">(optional)</span></label>
+        <input type="text" id="ord-institution" placeholder="e.g. University of Abuja">
+      </div>
+
+      <div class="field">
+        <label for="ord-referencing">Referencing style</label>
+        <select id="ord-referencing" required>
+          <option value="">Select a style</option>
+          <option value="APA">APA</option>
+          <option value="MLA">MLA</option>
+          <option value="Harvard">Harvard</option>
+          <option value="Chicago">Chicago</option>
+          <option value="Vancouver">Vancouver</option>
+          <option value="IEEE">IEEE</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:500;">
+          <input type="checkbox" id="ord-science" style="width:auto;">
+          This is science-based work requiring fieldwork, apparatus, or specimens
+        </label>
+        <p class="field-hint" id="scienceNote" style="display:none;">Fieldwork costs aren't included below. We'll follow up with a separate custom quote for that part.</p>
+      </div>
+
+      <div class="field">
+        <label for="ord-revisits">Revisits</label>
+        <input type="number" id="ord-revisits" required>
+        <p class="field-hint" id="revisitsHint"></p>
+      </div>
+
+      <div class="field">
+        <label for="ord-deadline">Deadline (days from now)</label>
+        <input type="number" id="ord-deadline" required>
+        <p class="field-hint" id="deadlineHint"></p>
+      </div>
+
+      <div class="order-meta-grid" style="background:var(--paper-dim);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1.25rem;">
+        <div><div class="label">Base price</div><div class="value" id="sumBase">—</div></div>
+        <div><div class="label">Extra revisits</div><div class="value" id="sumRevisits">—</div></div>
+        <div><div class="label">Urgency</div><div class="value" id="sumUrgency">—</div></div>
+        <div><div class="label">Total</div><div class="value" id="sumTotal" style="color:var(--royal-blue);">—</div></div>
+      </div>
+
+      <div class="field">
+        <label style="display:flex;align-items:flex-start;gap:0.5rem;font-weight:400;font-size:0.88rem;">
+          <input type="checkbox" id="ord-attest" required style="width:auto;margin-top:0.2rem;">
+          I confirm the details above are accurate and I understand this work is for my own academic use, subject to ZeroFluke Research Assistant's terms.
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="submitBtn">Place Request</button>
+    </form>
+
   </div>
 </section>
 
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
+<script src="js/order.js"></script>
 </body>
 </html>

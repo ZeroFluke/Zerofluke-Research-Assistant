@@ -39,11 +39,16 @@
             <label for="cf-topic">What is this about?</label>
             <select id="cf-topic" name="topic">
               <option>General question</option>
+              <option>Log in / Sign up issues</option>
               <option>Order status/complaint</option>
               <option>ID verification appeal</option>
               <option>Refund request</option>
               <option>Something else</option>
             </select>
+          </div>
+          <div class="field">
+            <label for="cf-order">Related order ID <span style="font-weight:400;color:var(--ink-soft);">(optional)</span></label>
+            <input type="text" id="cf-order" name="relatedOrderId" placeholder="e.g. OR1735000000">
           </div>
           <div class="field">
             <label for="cf-message">Message</label>
@@ -66,11 +71,70 @@
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
 <script>
-  // Placeholder handler, wired to Apps Script MailApp in a later phase.
+  var BACKEND_URL = "https://script.google.com/macros/s/AKfycby9I_6Z9l52yG1_GPNvis8gUlmVxKYACNPn9Ai1R01WY3vnY8SXCyc_rqf05EUUF7qU8A/exec";
+
+  var zfFullName = localStorage.getItem("zf_fullName");
+  var zfEmail = localStorage.getItem("zf_email");
+  var zfClientId = localStorage.getItem("zf_clientId");
+
+  if (zfClientId && zfFullName && zfEmail) {
+    var nameField = document.getElementById("cf-name");
+    var emailField = document.getElementById("cf-email");
+    nameField.value = zfFullName;
+    emailField.value = zfEmail;
+    nameField.readOnly = true;
+    emailField.readOnly = true;
+    nameField.style.background = "var(--paper-dim)";
+    emailField.style.background = "var(--paper-dim)";
+  }
+
   document.getElementById("contactForm").addEventListener("submit", function (e) {
     e.preventDefault();
-    document.getElementById("cf-status").textContent =
-      "Form submission will be connected to email routing in the next build phase.";
+
+    var statusEl = document.getElementById("cf-status");
+    var submitBtn = document.querySelector("#contactForm button[type=submit]");
+    statusEl.textContent = "";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending...";
+
+    var payload = {
+      action: "submitComplaint",
+      name: document.getElementById("cf-name").value.trim(),
+      email: document.getElementById("cf-email").value.trim(),
+      topic: document.getElementById("cf-topic").value,
+      relatedOrderId: document.getElementById("cf-order").value.trim(),
+      message: document.getElementById("cf-message").value.trim()
+    };
+
+    fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (result.success) {
+          statusEl.textContent = result.message;
+          statusEl.style.color = "var(--success)";
+          document.getElementById("contactForm").reset();
+          if (zfClientId && zfFullName && zfEmail) {
+            document.getElementById("cf-name").value = zfFullName;
+            document.getElementById("cf-email").value = zfEmail;
+          }
+        } else {
+          statusEl.textContent = result.error;
+          statusEl.style.color = "var(--danger)";
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Send Message";
+      })
+      .catch(function (err) {
+        statusEl.textContent = "Something went wrong. Please try again or email us directly.";
+        statusEl.style.color = "var(--danger)";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Send Message";
+        console.error(err);
+      });
   });
 </script>
 </body>

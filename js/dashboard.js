@@ -117,6 +117,7 @@ function buildOrderCardHtml(order) {
       '<div class="order-actions">' +
       '<button class="btn btn-primary" data-action="pay" data-type="Upfront-70">Pay Upfront (70%)</button>' +
       '<button class="btn btn-outline-dark" data-action="pay" data-type="Full">Pay in Full (discount)</button>' +
+      '<button class="btn btn-ghost" data-action="cancel" style="color:var(--danger);border-color:var(--line);">Cancel Request</button>' +
       '</div>' +
       '<div class="payment-wait-area"></div>';
   } else if (order.orderStatus === "Ongoing") {
@@ -141,6 +142,9 @@ function buildOrderCardHtml(order) {
       '<div class="payment-wait-area topup-wait-area"></div>' +
       '<div class="order-actions">' +
       '<button class="btn btn-ghost" data-action="satisfactory" style="color:var(--deep-navy);border-color:var(--line);">Mark as Satisfactory</button>' +
+      (Number(order.amountPaidSoFar) > 0
+        ? '<button class="btn btn-ghost" data-action="withdraw" style="color:var(--danger);border-color:var(--line);">Withdraw / Request Refund</button>'
+        : "") +
       '</div>';
   } else if (order.orderStatus === "Completed") {
     let files = "";
@@ -185,6 +189,18 @@ function wireOrderCard(order) {
   const satBtn = card.querySelector('[data-action="satisfactory"]');
   if (satBtn) {
     satBtn.addEventListener("click", () => markSatisfactory(order.orderId));
+  }
+
+  // Cancel (unpaid orders only)
+  const cancelBtn = card.querySelector('[data-action="cancel"]');
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => cancelOrder(order.orderId));
+  }
+
+  // Withdraw / refund (paid orders, within backend's refund window)
+  const withdrawBtn = card.querySelector('[data-action="withdraw"]');
+  if (withdrawBtn) {
+    withdrawBtn.addEventListener("click", () => withdrawOrder(order.orderId));
   }
 
   // Revisit upload form
@@ -347,6 +363,40 @@ async function markSatisfactory(orderId) {
     const result = await callBackend({ action: "markSatisfactory", orderId: orderId, clientId: zfClientId });
     if (result.success) {
       showStatus("Order marked as completed. Thank you.", "success");
+    } else {
+      showStatus(result.error, "error");
+    }
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+  }
+  loadDashboard();
+}
+
+async function cancelOrder(orderId) {
+  clearStatus();
+  if (!confirm("Cancel this request? This cannot be undone.")) return;
+
+  try {
+    const result = await callBackend({ action: "cancelOrder", orderId: orderId, clientId: zfClientId });
+    if (result.success) {
+      showStatus("Request cancelled.", "success");
+    } else {
+      showStatus(result.error, "error");
+    }
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+  }
+  loadDashboard();
+}
+
+async function withdrawOrder(orderId) {
+  clearStatus();
+  if (!confirm("Withdraw and request a refund for this order? A deduction applies, and this only works within the refund window.")) return;
+
+  try {
+    const result = await callBackend({ action: "requestRefund", orderId: orderId, clientId: zfClientId });
+    if (result.success) {
+      showStatus(result.message, "success");
     } else {
       showStatus(result.error, "error");
     }

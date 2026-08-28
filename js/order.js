@@ -67,9 +67,9 @@ function onLevelChange() {
   deadlineInput.value = levelConfig.standardTimeline;
 
   document.getElementById("revisitsHint").textContent =
-    "Minimum " + levelConfig.minRevisits + ", up to " + (levelConfig.minRevisits + pricingConfig.maxExtraRevisits) + " (extra revisits cost " + formatNaira(pricingConfig.revisitFee) + " each).";
+    "A revisit is when we revise your work after you upload your supervisor's comment. Minimum " + levelConfig.minRevisits + " revisits are included for " + level + ". You can add up to " + pricingConfig.maxExtraRevisits + " more now, each costing " + formatNaira(pricingConfig.revisitFee) + ". You can also top up further revisits later while the order is ongoing.";
   document.getElementById("deadlineHint").textContent =
-    "Standard timeline is " + levelConfig.standardTimeline + " days. Cannot be shorter than " + levelConfig.deadlineFloor + " days.";
+    "Standard delivery for " + level + " is " + levelConfig.standardTimeline + " days. Asking for it sooner adds " + pricingConfig.urgencyPercent + "% of the base price for every day earlier than standard. It cannot be shorter than " + levelConfig.deadlineFloor + " days, even at extra cost.";
 }
 
 // ---------- Live price calculation, mirrors handleCreateOrder's formula exactly ----------
@@ -164,5 +164,20 @@ document.getElementById("ord-revisits").addEventListener("input", recalculate);
 document.getElementById("ord-deadline").addEventListener("input", recalculate);
 document.getElementById("ord-science").addEventListener("change", recalculate);
 document.getElementById("orderForm").addEventListener("submit", submitOrder);
+
+// Info icons: hover works on desktop via CSS; this adds tap-to-toggle for
+// touch devices, and closes the popover when tapping elsewhere.
+["revisitsInfoBtn", "deadlineInfoBtn"].forEach((id) => {
+  document.getElementById(id).addEventListener("click", (e) => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const wasOpen = btn.classList.contains("open");
+    document.querySelectorAll(".info-icon.open").forEach((el) => el.classList.remove("open"));
+    if (!wasOpen) btn.classList.add("open");
+  });
+});
+document.addEventListener("click", () => {
+  document.querySelectorAll(".info-icon.open").forEach((el) => el.classList.remove("open"));
+});
 
 document.addEventListener("DOMContentLoaded", loadConfigAndInit);

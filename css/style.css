@@ -520,6 +520,45 @@ textarea:focus-visible, select:focus-visible {
 }
 .field-hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.35rem; }
 
+/* Info icon + popover, used where a field needs an explanation without
+   permanently taking up space under the input (e.g. revisits, deadline). */
+.field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.info-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sky-blue-pale);
+  color: var(--royal-blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.info-icon:hover, .info-icon:focus, .info-icon.open { background: var(--royal-blue); color: var(--paper); }
+.info-popover {
+  display: none;
+  position: absolute;
+  top: 26px;
+  right: 0;
+  z-index: 20;
+  width: 240px;
+  background: var(--deep-navy);
+  color: var(--paper);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(18,24,74,0.25);
+}
+.info-icon:hover .info-popover, .info-icon.open .info-popover { display: block; }
+
 /* ---------- Footer ---------- */
 .site-footer {
   background: var(--deep-navy);

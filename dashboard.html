@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard | ZeroFluke Research Assistant</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="dashboard">
+
+<div data-include="partials/header.html"></div>
+
+<section class="section" style="padding-block:2.5rem;">
+  <div class="container">
+
+    <div class="order-card-head" style="margin-bottom:1.5rem;">
+      <div>
+        <h1 id="welcomeHeading" style="font-size:var(--step-2);margin-bottom:0.2rem;">Welcome back</h1>
+        <p class="field-hint" style="margin-top:0;">Track your orders, upload supervisor comments, and manage payments here.</p>
+      </div>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+        <button class="btn btn-outline-dark" id="refreshBtn">Refresh</button>
+        <a href="order.html" class="btn btn-primary">Place a New Request</a>
+      </div>
+    </div>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div id="ordersContainer">
+      <div class="dashboard-empty">
+        <p>Loading your orders...</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div data-include="partials/footer.html"></div>
+<script src="js/main.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

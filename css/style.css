@@ -361,6 +361,82 @@ textarea:focus-visible, select:focus-visible {
   opacity: 0.55;
 }
 
+/* ---------- Dashboard ---------- */
+.status-pill {
+  display: inline-block;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.status-pill.pending { background: #fdf3e0; color: #8a5a00; }
+.status-pill.ongoing { background: var(--sky-blue-pale); color: var(--royal-blue); }
+.status-pill.completed { background: #eaf6ef; color: var(--success); }
+.status-pill.cancelled { background: #fdeceb; color: var(--danger); }
+
+.order-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 1.5rem;
+}
+.order-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.order-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+@media (min-width: 640px) { .order-meta-grid { grid-template-columns: repeat(4, 1fr); } }
+.order-meta-grid .label { font-size: 0.75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+.order-meta-grid .value { font-weight: 600; color: var(--deep-navy); }
+
+.order-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+.order-actions .btn { font-size: 0.85rem; padding: 0.6rem 1.1rem; }
+
+.revisit-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.revisit-upload-row input[type="file"] { max-width: 220px; font-size: 0.82rem; }
+
+.dashboard-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--ink-soft);
+}
+
+.topup-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.topup-row input[type="number"] { width: 70px; padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.9rem; }
+.payment-wait-banner {
+  background: var(--sky-blue-pale);
+  border: 1px solid #bfe6f5;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-top: 0.9rem;
+  font-size: 0.87rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* ---------- Cards / Grid ---------- */
 .grid { display: grid; gap: 1.75rem; }
 .grid-3 { grid-template-columns: 1fr; }

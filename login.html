@@ -3,29 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login | ZeroFluke Research Assistant</title>
+<title>Log In | ZeroFluke Research Assistant</title>
 <link rel="icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body data-page="login">
 
 <div data-include="partials/header.html"></div>
 
-<section class="section" style="min-height:50vh;display:flex;align-items:center;">
-  <div class="container text-center">
-    <span class="eyebrow" style="color:var(--royal-blue);">Coming soon</span>
-    <h1>This page is being built in the next phase.</h1>
-    <p style="max-width:46ch;margin-inline:auto;">
-      The login flow, including ID verification, the pricing
-      engine, and dashboard access, is scoped and ready to build next.
-    </p>
-    <a href="index.html" class="btn btn-outline-dark" style="margin-top:1rem;">Back to Home</a>
+<section class="section" style="padding-block:3rem;">
+  <div class="container">
+    <div class="auth-card">
+      <h1 style="font-size:var(--step-2);text-align:center;margin-bottom:0.4rem;">Welcome back</h1>
+      <p style="text-align:center;font-size:0.9rem;margin-bottom:1.5rem;">Log in to check your order status and manage revisits.</p>
+
+      <div id="statusBox" class="status-box"></div>
+
+      <div class="google-btn-wrap" id="googleBtnWrap"></div>
+      <div class="auth-divider">or log in with email</div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="li-email">Email address</label>
+          <input type="email" id="li-email" required>
+        </div>
+        <div class="field">
+          <label for="li-password">Password</label>
+          <input type="password" id="li-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="loginSubmitBtn">Log In</button>
+      </form>
+
+      <p class="text-center field-hint" style="margin-top:1.25rem;">
+        Don't have an account yet? <a href="signup.html" style="color:var(--royal-blue);font-weight:600;">Sign up</a>
+      </p>
+    </div>
   </div>
 </section>
 
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
+<script src="js/login.js"></script>
 </body>
 </html>

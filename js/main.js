@@ -56,28 +56,46 @@ function clearSessionAndRedirect() {
 
 function applySessionNav() {
   const clientId = localStorage.getItem("zf_clientId");
-  const fullName = localStorage.getItem("zf_fullName");
   if (!clientId) return;
 
-  const firstName = (fullName || "Account").split(" ")[0];
-  const loggedInLinksHtml = (mobile) =>
-    `<a href="dashboard.html"${mobile ? ' data-nav="dashboard"' : ''}>${mobile ? "My Dashboard" : firstName + "'s Dashboard"}</a>` +
-    `<a href="#" id="${mobile ? "logoutLinkMobile" : "logoutLinkDesktop"}"${mobile ? "" : ' class="nav-login"'}>Log out</a>`;
+  // Desktop: swap Log in / Sign up / Place a Request for the same account
+  // dropdown used on dashboard.html and order.html. Only present on pages
+  // using the full public header — no-ops harmlessly otherwise.
+  const desktopSlot = document.getElementById("ctaAreaDesktop");
+  if (desktopSlot) {
+    desktopSlot.innerHTML =
+      '<div class="account-menu" id="accountMenu">' +
+      '<button class="account-trigger" id="accountTrigger" aria-expanded="false">' +
+      '<span id="accountFirstName">Account</span>' +
+      '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '</button>' +
+      '<div class="account-dropdown" id="accountDropdown">' +
+      '<a href="dashboard.html">Dashboard</a>' +
+      '<a href="order.html">Place a New Order</a>' +
+      '<a href="contact.html">Lodge a Complaint</a>' +
+      '<a href="#" id="appLogoutLink">Log out</a>' +
+      '</div>' +
+      '</div>';
+  }
 
-  const desktopSlot = document.getElementById("authLinksDesktop");
-  const mobileSlot = document.getElementById("authLinksMobile");
-  if (desktopSlot) desktopSlot.innerHTML = loggedInLinksHtml(false);
-  if (mobileSlot) mobileSlot.innerHTML = loggedInLinksHtml(true);
+  // Mobile panel is already an expandable menu, so a flat stacked list reads
+  // better here than nesting another click-to-open dropdown inside it.
+  const mobileSlot = document.getElementById("ctaAreaMobile");
+  if (mobileSlot) {
+    mobileSlot.innerHTML =
+      '<a href="dashboard.html" data-nav="dashboard">Dashboard</a>' +
+      '<a href="order.html">Place a New Order</a>' +
+      '<a href="contact.html">Lodge a Complaint</a>' +
+      '<a href="#" id="appLogoutLinkMobile">Log out</a>';
 
-  ["logoutLinkDesktop", "logoutLinkMobile"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener("click", (e) => {
+    const mobileLogout = document.getElementById("appLogoutLinkMobile");
+    if (mobileLogout) {
+      mobileLogout.addEventListener("click", (e) => {
         e.preventDefault();
         clearSessionAndRedirect();
       });
     }
-  });
+  }
 }
 
 // Wires the simplified account-menu header used on dashboard.html / order.html.

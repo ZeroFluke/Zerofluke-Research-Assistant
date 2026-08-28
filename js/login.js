@@ -59,6 +59,13 @@ document.getElementById("loginForm").addEventListener("submit", async function (
       saveSessionAndGoToDashboard(result.clientId, result.fullName, email, "Welcome back, " + result.fullName + ". Redirecting...");
     } else {
       showStatus(result.error, "error");
+      // handleLogin returns this exact message for both a wrong password and an
+      // unrecognized email (deliberately, so failed attempts can't be used to
+      // guess which accounts exist) — so this is the one case we show the
+      // reset link for. The separate "not verified yet" message doesn't need it.
+      if (result.error === "Incorrect email or password.") {
+        document.getElementById("forgotPasswordLine").style.display = "block";
+      }
     }
   } catch (err) {
     submitBtn.disabled = false;

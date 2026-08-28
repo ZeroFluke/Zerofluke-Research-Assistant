@@ -557,6 +557,54 @@ textarea:focus-visible, select:focus-visible {
   color: var(--sky-blue);
   font-size: 1rem;
 }
+.slogan-light {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--royal-blue);
+  font-size: 1.05rem;
+}
+
+/* ---------- Account menu (dashboard / order header) ---------- */
+.account-menu { position: relative; }
+.account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: var(--deep-navy);
+  cursor: pointer;
+}
+.account-trigger:hover { border-color: var(--royal-blue); }
+.account-trigger svg { transition: transform 0.15s ease; color: var(--ink-soft); }
+.account-menu.open .account-trigger svg { transform: rotate(180deg); }
+.account-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  min-width: 200px;
+  padding: 0.5rem;
+  z-index: 30;
+}
+.account-menu.open .account-dropdown { display: block; }
+.account-dropdown a {
+  display: block;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.account-dropdown a:hover { background: var(--sky-blue-pale); color: var(--royal-blue); }
+.account-dropdown a#appLogoutLink { border-top: 1px solid var(--line); margin-top: 0.35rem; padding-top: 0.75rem; color: var(--danger); }
 .footer-bottom {
   border-top: 1px solid rgba(251,251,254,0.12);
   padding-top: 1.5rem;

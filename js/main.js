@@ -47,6 +47,13 @@ function setFooterYear() {
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 }
 
+function clearSessionAndRedirect() {
+  localStorage.removeItem("zf_clientId");
+  localStorage.removeItem("zf_fullName");
+  localStorage.removeItem("zf_email");
+  window.location.href = "index.html";
+}
+
 function applySessionNav() {
   const clientId = localStorage.getItem("zf_clientId");
   const fullName = localStorage.getItem("zf_fullName");
@@ -67,13 +74,43 @@ function applySessionNav() {
     if (el) {
       el.addEventListener("click", (e) => {
         e.preventDefault();
-        localStorage.removeItem("zf_clientId");
-        localStorage.removeItem("zf_fullName");
-        localStorage.removeItem("zf_email");
-        window.location.href = "index.html";
+        clearSessionAndRedirect();
       });
     }
   });
+}
+
+// Wires the simplified account-menu header used on dashboard.html / order.html.
+// No-ops silently on pages that use the full public header instead.
+function initAppHeader() {
+  const menu = document.getElementById("accountMenu");
+  const trigger = document.getElementById("accountTrigger");
+  const nameEl = document.getElementById("accountFirstName");
+  const logoutLink = document.getElementById("appLogoutLink");
+  if (!menu || !trigger) return;
+
+  const fullName = localStorage.getItem("zf_fullName");
+  if (nameEl) nameEl.textContent = (fullName || "Account").split(" ")[0];
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = menu.classList.toggle("open");
+    trigger.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target)) {
+      menu.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  if (logoutLink) {
+    logoutLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearSessionAndRedirect();
+    });
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -82,4 +119,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   wireMobileNav();
   setFooterYear();
   applySessionNav();
+  initAppHeader();
 });

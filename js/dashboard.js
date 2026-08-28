@@ -8,6 +8,7 @@ if (!zfClientId) {
 
 let currentOrders = [];
 let currentEmail = localStorage.getItem("zf_email") || "";
+let revisitFee = 0;
 
 function callBackend(payload) {
   return fetch(BACKEND_URL, {
@@ -15,6 +16,15 @@ function callBackend(payload) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify(payload)
   }).then((res) => res.json());
+}
+
+async function loadRevisitFee() {
+  try {
+    const result = await callBackend({ action: "getPricingConfig" });
+    if (result.success) revisitFee = Number(result.revisitFee) || 0;
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 function fileToBase64(file) {
@@ -135,9 +145,12 @@ function buildOrderCardHtml(order) {
         : '<p class="field-hint" style="margin:0;">No revisits remaining. Top up below to continue.</p>') +
       '</div>' +
       '<div class="revisit-upload-row topup-row">' +
-      '<label class="field-hint" style="margin:0;">Add revisits:</label>' +
+      '<button class="btn btn-outline-dark" data-action="topup-toggle">Add Revisits</button>' +
+      '<div class="topup-picker" style="display:none;align-items:center;gap:0.6rem;">' +
+      '<label class="field-hint" style="margin:0;">How many?</label>' +
       '<input type="number" min="1" max="10" value="1" class="topup-count">' +
-      '<button class="btn btn-outline-dark" data-action="topup">Top Up Revisits</button>' +
+      '<button class="btn btn-primary" data-action="topup-confirm">Add Revisits</button>' +
+      '</div>' +
       '</div>' +
       '<div class="payment-wait-area topup-wait-area"></div>' +
       '<div class="order-actions">' +
@@ -213,11 +226,24 @@ function wireOrderCard(order) {
     });
   }
 
-  // Top up
-  const topupBtn = card.querySelector('[data-action="topup"]');
-  if (topupBtn) {
-    topupBtn.addEventListener("click", () => {
+  // Top up: reveal picker, then confirm with cost shown before charging
+  const topupToggleBtn = card.querySelector('[data-action="topup-toggle"]');
+  if (topupToggleBtn) {
+    topupToggleBtn.addEventListener("click", () => {
+      const picker = card.querySelector(".topup-picker");
+      picker.style.display = picker.style.display === "none" ? "flex" : "none";
+    });
+  }
+  const topupConfirmBtn = card.querySelector('[data-action="topup-confirm"]');
+  if (topupConfirmBtn) {
+    topupConfirmBtn.addEventListener("click", () => {
       const count = Number(card.querySelector(".topup-count").value);
+      if (!count || count < 1) {
+        showStatus("Enter how many revisits you'd like to add.", "error");
+        return;
+      }
+      const costText = revisitFee ? " at " + formatNaira(count * revisitFee) : "";
+      if (!confirm("Add " + count + " revisit(s)" + costText + "? This will open payment for that amount.")) return;
       topupRevisits(order.orderId, count, card.querySelector(".topup-wait-area"));
     });
   }
@@ -407,4 +433,4 @@ async function withdrawOrder(orderId) {
 }
 
 document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
-document.addEventListener("DOMContentLoaded", loadDashboard);
+document.addEventListener("DOMContentLoaded", () => { loadRevisitFee(); loadDashboard(); });

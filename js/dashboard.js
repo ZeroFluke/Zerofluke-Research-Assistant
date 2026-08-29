@@ -544,5 +544,23 @@ document.getElementById("withdrawConfirmBtn").addEventListener("click", async ()
   loadDashboard();
 });
 
+// ---------- Auto-verify on return from Paystack's redirect ----------
+// Paystack appends ?reference=...&trxref=... when it redirects back here
+// after payment, now that initializePayment sets a callback_url. Detect
+// that and confirm automatically instead of requiring a manual click.
+function checkForReturningPayment() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("reference") || params.get("trxref");
+  if (reference) {
+    // Strip the query params so a page refresh doesn't re-trigger this.
+    window.history.replaceState({}, document.title, window.location.pathname);
+    confirmPayment(reference);
+  }
+}
+
 document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
-document.addEventListener("DOMContentLoaded", () => { loadRevisitFee(); loadDashboard(); });
+document.addEventListener("DOMContentLoaded", () => {
+  loadRevisitFee();
+  loadDashboard();
+  checkForReturningPayment();
+});

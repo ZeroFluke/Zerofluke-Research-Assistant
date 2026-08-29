@@ -281,6 +281,8 @@ function wireOrderCard(order) {
 }
 
 // ---------- Payments ----------
+const PAYSTACK_PUBLIC_KEY = "pk_test_cddc8c3744db3437e87cf07597f4a7cc0411cb91";
+
 async function startPayment(orderId, paymentType, waitArea) {
   clearStatus();
   try {
@@ -297,24 +299,29 @@ async function startPayment(orderId, paymentType, waitArea) {
       return;
     }
 
-    window.open(result.authorizationUrl, "_blank");
-    renderWaitBanner(waitArea, result.reference, formatNaira(result.amount));
+    openPaystackPopup(result.reference, result.amount, result.email, waitArea);
   } catch (err) {
     showStatus("Something went wrong starting payment: " + err.message, "error");
   }
 }
 
-function renderWaitBanner(waitArea, reference, amountText) {
-  if (!waitArea) return;
-  waitArea.innerHTML =
-    '<div class="payment-wait-banner">' +
-    '<span>A payment page for ' + amountText + ' opened in a new tab. Complete it, then come back here.</span>' +
-    '<button class="btn btn-primary" data-reference="' + reference + '">I\'ve Completed Payment</button>' +
-    '</div>';
-  waitArea.querySelector("button").addEventListener("click", (e) => confirmPayment(e.target.dataset.reference));
+function openPaystackPopup(reference, amount, email, waitArea) {
+  const handler = PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY,
+    email: email,
+    amount: Math.round(amount * 100),
+    ref: reference,
+    callback: function (response) {
+      confirmPayment(response.reference, waitArea);
+    },
+    onClose: function () {
+      showStatus("Payment window closed. No charge was made.", "info");
+    }
+  });
+  handler.openIframe();
 }
 
-async function confirmPayment(reference) {
+async function confirmPayment(reference, waitArea) {
   clearStatus();
   showStatus("Confirming your payment...", "info");
   try {
@@ -404,9 +411,8 @@ async function topupRevisits(orderId, revisitCount, waitArea) {
       return;
     }
 
-    window.open(payResult.authorizationUrl, "_blank");
-    renderWaitBanner(waitArea, payResult.reference, formatNaira(payResult.amount));
-    showStatus(result.revisitsAdded + " revisit(s) added. Complete payment of " + formatNaira(result.cost) + " in the new tab.", "info");
+    openPaystackPopup(payResult.reference, payResult.amount, payResult.email, waitArea);
+    showStatus(result.revisitsAdded + " revisit(s) added. Complete payment of " + formatNaira(result.cost) + " in the payment window.", "info");
   } catch (err) {
     showStatus("Something went wrong: " + err.message, "error");
   }
@@ -544,23 +550,8 @@ document.getElementById("withdrawConfirmBtn").addEventListener("click", async ()
   loadDashboard();
 });
 
-// ---------- Auto-verify on return from Paystack's redirect ----------
-// Paystack appends ?reference=...&trxref=... when it redirects back here
-// after payment, now that initializePayment sets a callback_url. Detect
-// that and confirm automatically instead of requiring a manual click.
-function checkForReturningPayment() {
-  const params = new URLSearchParams(window.location.search);
-  const reference = params.get("reference") || params.get("trxref");
-  if (reference) {
-    // Strip the query params so a page refresh doesn't re-trigger this.
-    window.history.replaceState({}, document.title, window.location.pathname);
-    confirmPayment(reference);
-  }
-}
-
 document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
 document.addEventListener("DOMContentLoaded", () => {
   loadRevisitFee();
   loadDashboard();
-  checkForReturningPayment();
 });

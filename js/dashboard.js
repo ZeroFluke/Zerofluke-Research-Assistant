@@ -1,6 +1,5 @@
 const BACKEND_URL = "https://script.google.com/macros/s/AKfycby9I_6Z9l52yG1_GPNvis8gUlmVxKYACNPn9Ai1R01WY3vnY8SXCyc_rqf05EUUF7qU8A/exec";
 
-// ---------- Session guard (runs immediately, before DOM is even ready) ----------
 const zfClientId = localStorage.getItem("zf_clientId");
 if (!zfClientId) {
   window.location.href = "login.html";
@@ -66,14 +65,12 @@ function statusClass(status) {
   return "pending";
 }
 
-// ---------- Load dashboard ----------
 async function loadDashboard() {
   const container = document.getElementById("ordersContainer");
   try {
     const result = await callBackend({ action: "getDashboard", clientId: zfClientId });
 
     if (!result.success) {
-      // Client row is gone or otherwise invalid — clear the stale session and send back to login.
       localStorage.removeItem("zf_clientId");
       localStorage.removeItem("zf_fullName");
       localStorage.removeItem("zf_email");
@@ -152,12 +149,11 @@ function buildOrderCardHtml(order) {
       '<button class="btn btn-primary" data-action="pay" data-type="Upfront-70">Pay Upfront (70%)</button>' +
       '<button class="btn btn-outline-dark" data-action="pay" data-type="Full">Pay in Full (discount)</button>' +
       '<button class="btn btn-ghost" data-action="cancel" style="color:var(--danger);border-color:var(--line);">Cancel Request</button>' +
-      '</div>' +
-      '<div class="payment-wait-area"></div>';
+      '</div>';
   } else if (order.orderStatus === "Ongoing") {
     actionsHtml =
       (balanceOutstanding
-        ? '<div class="order-actions"><button class="btn btn-primary" data-action="pay" data-type="Balance-30">Pay Balance (30%)</button></div><div class="payment-wait-area"></div>'
+        ? '<div class="order-actions"><button class="btn btn-primary" data-action="pay" data-type="Balance-30">Pay Balance (30%)</button></div>'
         : "") +
       '<div class="revisit-upload-row">' +
       (revisitsRemaining > 0
@@ -176,7 +172,6 @@ function buildOrderCardHtml(order) {
       '<button class="btn btn-primary" data-action="topup-confirm">Add Revisits</button>' +
       '</div>' +
       '</div>' +
-      '<div class="payment-wait-area topup-wait-area"></div>' +
       '<div class="order-actions">' +
       '<button class="btn btn-ghost" data-action="satisfactory" style="color:var(--deep-navy);border-color:var(--line);">Mark as Satisfactory</button>' +
       '<button class="btn btn-ghost" data-action="request-update" style="color:var(--royal-blue);border-color:var(--line);">Request Update</button>' +
@@ -213,41 +208,34 @@ function buildOrderCardHtml(order) {
   );
 }
 
-// ---------- Wiring per rendered card ----------
 function wireOrderCard(order) {
   const card = document.querySelector('.order-card[data-order-id="' + order.orderId + '"]');
   if (!card) return;
 
-  // Pay buttons
   card.querySelectorAll('[data-action="pay"]').forEach((btn) => {
-    btn.addEventListener("click", () => startPayment(order.orderId, btn.dataset.type, card.querySelector(".payment-wait-area")));
+    btn.addEventListener("click", () => startPayment(order.orderId, btn.dataset.type));
   });
 
-  // Mark satisfactory
   const satBtn = card.querySelector('[data-action="satisfactory"]');
   if (satBtn) {
     satBtn.addEventListener("click", () => markSatisfactory(order.orderId));
   }
 
-  // Cancel (unpaid orders only)
   const cancelBtn = card.querySelector('[data-action="cancel"]');
   if (cancelBtn) {
     cancelBtn.addEventListener("click", () => cancelOrder(order.orderId));
   }
 
-  // Withdraw / refund (paid orders, within backend's refund window)
   const withdrawBtn = card.querySelector('[data-action="withdraw"]');
   if (withdrawBtn) {
     withdrawBtn.addEventListener("click", () => openWithdrawModal(order.orderId));
   }
 
-  // Request an update (reuses the complaints system, prefilled)
   const requestUpdateBtn = card.querySelector('[data-action="request-update"]');
   if (requestUpdateBtn) {
     requestUpdateBtn.addEventListener("click", () => requestOrderUpdate(order.orderId));
   }
 
-  // Revisit upload form
   const uploadForm = card.querySelector('form[data-action="upload-revisit"]');
   if (uploadForm) {
     uploadForm.addEventListener("submit", (e) => {
@@ -257,7 +245,6 @@ function wireOrderCard(order) {
     });
   }
 
-  // Top up: reveal picker, then confirm with cost shown before charging
   const topupToggleBtn = card.querySelector('[data-action="topup-toggle"]');
   if (topupToggleBtn) {
     topupToggleBtn.addEventListener("click", () => {
@@ -275,15 +262,30 @@ function wireOrderCard(order) {
       }
       const costText = revisitFee ? " at " + formatNaira(count * revisitFee) : "";
       if (!confirm("Add " + count + " revisit(s)" + costText + "? This will open payment for that amount.")) return;
-      topupRevisits(order.orderId, count, card.querySelector(".topup-wait-area"));
+      topupRevisits(order.orderId, count);
     });
   }
 }
 
-// ---------- Payments ----------
 const PAYSTACK_PUBLIC_KEY = "pk_test_cddc8c3744db3437e87cf07597f4a7cc0411cb91";
 
-async function startPayment(orderId, paymentType, waitArea) {
+function openPaystackPopup(reference, amount, email) {
+  const handler = PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY,
+    email: email,
+    amount: Math.round(amount * 100),
+    ref: reference,
+    callback: function (response) {
+      confirmPayment(response.reference);
+    },
+    onClose: function () {
+      showStatus("Payment window closed. No charge was made.", "info");
+    }
+  });
+  handler.openIframe();
+}
+
+async function startPayment(orderId, paymentType) {
   clearStatus();
   try {
     const result = await callBackend({
@@ -299,54 +301,32 @@ async function startPayment(orderId, paymentType, waitArea) {
       return;
     }
 
-    openPaystackPopup(orderId, result.reference, result.amount, result.email, waitArea);
+    openPaystackPopup(result.reference, result.amount, result.email);
   } catch (err) {
     showStatus("Something went wrong starting payment: " + err.message, "error");
   }
 }
 
-function openPaystackPopup(orderId, reference, amount, email, waitArea) {
-  const handler = PaystackPop.setup({
-    key: PAYSTACK_PUBLIC_KEY,
-    email: email,
-    amount: Math.round(amount * 100),
-    ref: reference,
-    callback: function (response) {
-      clearStatus();
-      showStatus("Payment received. Waiting for confirmation...", "info");
-      waitForPaymentOnDashboard(orderId, 0);
-    },
-    onClose: function () {
-      showStatus("Payment window closed. No charge was made.", "info");
+async function confirmPayment(reference, isRetry) {
+  clearStatus();
+  showStatus("Confirming your payment...", "info");
+  try {
+    const result = await callBackend({ action: "verifyPayment", reference: reference });
+    if (result.success) {
+      showStatus("Payment confirmed. Updating your dashboard...", "success");
+    } else {
+      showStatus("We couldn't confirm that payment yet. If you completed it, this can take a moment, try Refresh shortly.", "error");
     }
-  });
-  handler.openIframe();
+  } catch (err) {
+    if (!isRetry) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      return confirmPayment(reference, true);
+    }
+    showStatus("Something went wrong confirming payment: " + err.message + ". Please click Refresh.", "error");
+  }
+  loadDashboard();
 }
 
-const PAYMENT_POLL_DELAYS = [2000, 3000, 4000, 5000];
-
-async function waitForPaymentOnDashboard(orderId, attempt) {
-  const previousPaid = (currentOrders.find((o) => o.orderId === orderId) || {}).amountPaidSoFar;
-
-  await loadDashboard();
-
-  const updated = currentOrders.find((o) => o.orderId === orderId);
-  const paidChanged = updated && Number(updated.amountPaidSoFar) !== Number(previousPaid || 0);
-
-  if (paidChanged || updated.orderStatus === "Completed") {
-    showStatus("Payment confirmed.", "success");
-    return;
-  }
-
-  if (attempt < PAYMENT_POLL_DELAYS.length) {
-    setTimeout(() => waitForPaymentOnDashboard(orderId, attempt + 1), PAYMENT_POLL_DELAYS[attempt]);
-    return;
-  }
-
-  showStatus("Still processing your payment. This can take a moment, try Refresh shortly.", "info");
-}
-
-// ---------- Revisits ----------
 async function uploadRevisit(orderId, file, formEl) {
   clearStatus();
   const btn = formEl.querySelector("button");
@@ -389,7 +369,7 @@ async function uploadRevisit(orderId, file, formEl) {
   loadDashboard();
 }
 
-async function topupRevisits(orderId, revisitCount, waitArea) {
+async function topupRevisits(orderId, revisitCount) {
   clearStatus();
   if (!revisitCount || revisitCount < 1) {
     showStatus("Enter how many revisits you'd like to add.", "error");
@@ -420,8 +400,8 @@ async function topupRevisits(orderId, revisitCount, waitArea) {
       return;
     }
 
-    openPaystackPopup(orderId, payResult.reference, payResult.amount, payResult.email, waitArea);
-    showStatus(result.revisitsAdded + " revisit(s) added. Complete payment of " + formatNaira(result.cost) + " in the payment window.", "info");
+    showStatus(result.revisitsAdded + " revisit(s) added. Opening payment for " + formatNaira(result.cost) + "...", "info");
+    openPaystackPopup(payResult.reference, payResult.amount, payResult.email);
   } catch (err) {
     showStatus("Something went wrong: " + err.message, "error");
   }
@@ -484,7 +464,6 @@ async function requestOrderUpdate(orderId) {
   }
 }
 
-// ---------- Withdraw / refund modal ----------
 let withdrawTargetOrderId = null;
 
 function openWithdrawModal(orderId) {
@@ -559,8 +538,10 @@ document.getElementById("withdrawConfirmBtn").addEventListener("click", async ()
   loadDashboard();
 });
 
+async function initDashboardPage() {
+  await loadRevisitFee();
+  await loadDashboard();
+}
+
 document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
-document.addEventListener("DOMContentLoaded", () => {
-  loadRevisitFee();
-  loadDashboard();
-});
+document.addEventListener("DOMContentLoaded", initDashboardPage);

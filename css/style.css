@@ -459,19 +459,6 @@ textarea:focus-visible, select:focus-visible {
 
 .topup-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .topup-row input[type="number"] { width: 70px; padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.9rem; }
-.payment-wait-banner {
-  background: var(--sky-blue-pale);
-  border: 1px solid #bfe6f5;
-  border-radius: 10px;
-  padding: 0.9rem 1rem;
-  margin-top: 0.9rem;
-  font-size: 0.87rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  align-items: center;
-  justify-content: space-between;
-}
 
 /* ---------- Cards / Grid ---------- */
 .grid { display: grid; gap: 1.75rem; }

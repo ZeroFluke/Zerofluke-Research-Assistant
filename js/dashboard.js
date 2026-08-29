@@ -238,7 +238,7 @@ function wireOrderCard(order) {
   // Withdraw / refund (paid orders, within backend's refund window)
   const withdrawBtn = card.querySelector('[data-action="withdraw"]');
   if (withdrawBtn) {
-    withdrawBtn.addEventListener("click", () => withdrawOrder(order.orderId));
+    withdrawBtn.addEventListener("click", () => openWithdrawModal(order.orderId));
   }
 
   // Request an update (reuses the complaints system, prefilled)
@@ -469,21 +469,80 @@ async function requestOrderUpdate(orderId) {
   }
 }
 
-async function withdrawOrder(orderId) {
-  clearStatus();
+// ---------- Withdraw / refund modal ----------
+let withdrawTargetOrderId = null;
 
+function openWithdrawModal(orderId) {
+  withdrawTargetOrderId = orderId;
+  document.getElementById("withdrawReasonSelect").value = "";
+  document.getElementById("withdrawOtherText").value = "";
+  document.getElementById("withdrawOtherField").style.display = "none";
+  document.getElementById("withdrawContinueBtn").disabled = true;
+  document.getElementById("withdrawStepReason").style.display = "";
+  document.getElementById("withdrawStepConfirm").style.display = "none";
+  document.getElementById("withdrawOrderIdLabel").textContent = orderId;
+  document.getElementById("withdrawModal").classList.add("open");
+}
+
+function closeWithdrawModal() {
+  document.getElementById("withdrawModal").classList.remove("open");
+  withdrawTargetOrderId = null;
+}
+
+function currentWithdrawReason() {
+  const selected = document.getElementById("withdrawReasonSelect").value;
+  if (selected === "Other") {
+    return document.getElementById("withdrawOtherText").value.trim();
+  }
+  return selected;
+}
+
+document.getElementById("withdrawReasonSelect").addEventListener("change", function () {
+  const isOther = this.value === "Other";
+  document.getElementById("withdrawOtherField").style.display = isOther ? "" : "none";
+  document.getElementById("withdrawContinueBtn").disabled = isOther ? true : !this.value;
+});
+
+document.getElementById("withdrawOtherText").addEventListener("input", function () {
+  document.getElementById("withdrawContinueBtn").disabled = this.value.trim().length === 0;
+});
+
+document.getElementById("withdrawCancelBtn").addEventListener("click", closeWithdrawModal);
+document.getElementById("withdrawBackBtn").addEventListener("click", () => {
+  document.getElementById("withdrawStepReason").style.display = "";
+  document.getElementById("withdrawStepConfirm").style.display = "none";
+});
+
+document.getElementById("withdrawContinueBtn").addEventListener("click", () => {
+  document.getElementById("withdrawStepReason").style.display = "none";
+  document.getElementById("withdrawStepConfirm").style.display = "";
+});
+
+document.getElementById("withdrawConfirmBtn").addEventListener("click", async () => {
+  const orderId = withdrawTargetOrderId;
+  const reason = currentWithdrawReason();
+  const btn = document.getElementById("withdrawConfirmBtn");
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+
+  clearStatus();
   try {
-    const result = await callBackend({ action: "requestRefund", orderId: orderId, clientId: zfClientId });
+    const result = await callBackend({ action: "requestRefund", orderId: orderId, clientId: zfClientId, reason: reason });
+    closeWithdrawModal();
     if (result.success) {
       showStatus(result.message, "success");
     } else {
       showStatus(result.error, "error");
     }
   } catch (err) {
+    closeWithdrawModal();
     showStatus("Something went wrong: " + err.message, "error");
   }
+
+  btn.disabled = false;
+  btn.textContent = "Yes, cancel and refund";
   loadDashboard();
-}
+});
 
 document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
 document.addEventListener("DOMContentLoaded", () => { loadRevisitFee(); loadDashboard(); });

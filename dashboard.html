@@ -46,6 +46,45 @@
   </div>
 </section>
 
+<div class="modal-overlay" id="withdrawModal">
+  <div class="modal-card">
+
+    <div id="withdrawStepReason">
+      <h3 style="margin-top:0;">Why are you withdrawing?</h3>
+      <p class="field-hint">This helps us understand what's not working. Choose the closest reason.</p>
+      <div class="field">
+        <select id="withdrawReasonSelect">
+          <option value="">Select a reason...</option>
+          <option value="Changed my mind">Changed my mind</option>
+          <option value="Too expensive">Too expensive for my budget</option>
+          <option value="Decided to do it myself">Decided to do it myself</option>
+          <option value="Chose another service">Chose another service</option>
+          <option value="No longer need this research">No longer need this research</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field" id="withdrawOtherField" style="display:none;">
+        <label for="withdrawOtherText">Please tell us more</label>
+        <textarea id="withdrawOtherText" rows="3"></textarea>
+      </div>
+      <div class="order-actions" style="margin-top:1.25rem;">
+        <button class="btn btn-outline-dark" id="withdrawCancelBtn">Never mind</button>
+        <button class="btn btn-primary" id="withdrawContinueBtn" disabled>Continue</button>
+      </div>
+    </div>
+
+    <div id="withdrawStepConfirm" style="display:none;">
+      <h3 style="margin-top:0;color:var(--danger);">This will cancel your order</h3>
+      <p>You're requesting a refund for order <strong id="withdrawOrderIdLabel"></strong>. This cancels the order and <strong>cannot be reversed</strong>. Your refund will be processed according to our refund policy.</p>
+      <div class="order-actions" style="margin-top:1.25rem;">
+        <button class="btn btn-outline-dark" id="withdrawBackBtn">Go back</button>
+        <button class="btn btn-primary" id="withdrawConfirmBtn" style="background:var(--danger);border-color:var(--danger);">Yes, cancel and refund</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
 <script src="js/dashboard.js"></script>

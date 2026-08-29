@@ -299,20 +299,22 @@ async function startPayment(orderId, paymentType, waitArea) {
       return;
     }
 
-    openPaystackPopup(result.reference, result.amount, result.email, waitArea);
+    openPaystackPopup(orderId, result.reference, result.amount, result.email, waitArea);
   } catch (err) {
     showStatus("Something went wrong starting payment: " + err.message, "error");
   }
 }
 
-function openPaystackPopup(reference, amount, email, waitArea) {
+function openPaystackPopup(orderId, reference, amount, email, waitArea) {
   const handler = PaystackPop.setup({
     key: PAYSTACK_PUBLIC_KEY,
     email: email,
     amount: Math.round(amount * 100),
     ref: reference,
     callback: function (response) {
-      confirmPayment(response.reference, waitArea);
+      clearStatus();
+      showStatus("Payment received. Waiting for confirmation...", "info");
+      waitForPaymentOnDashboard(orderId, 0);
     },
     onClose: function () {
       showStatus("Payment window closed. No charge was made.", "info");
@@ -321,26 +323,27 @@ function openPaystackPopup(reference, amount, email, waitArea) {
   handler.openIframe();
 }
 
-async function confirmPayment(reference, waitArea, isRetry) {
-  clearStatus();
-  showStatus("Confirming your payment...", "info");
-  try {
-    const result = await callBackend({ action: "verifyPayment", reference: reference });
-    if (result.success) {
-      showStatus("Payment confirmed. Updating your dashboard...", "success");
-    } else {
-      showStatus("We couldn't confirm that payment yet. If you completed it, this can take a moment, try Refresh shortly.", "error");
-    }
-    loadDashboard();
-  } catch (err) {
-    if (!isRetry) {
-      showStatus("Confirming your payment...", "info");
-      setTimeout(() => confirmPayment(reference, waitArea, true), 1500);
-      return;
-    }
-    showStatus("Something went wrong confirming payment: " + err.message, "error");
-    loadDashboard();
+const PAYMENT_POLL_DELAYS = [2000, 3000, 4000, 5000];
+
+async function waitForPaymentOnDashboard(orderId, attempt) {
+  const previousPaid = (currentOrders.find((o) => o.orderId === orderId) || {}).amountPaidSoFar;
+
+  await loadDashboard();
+
+  const updated = currentOrders.find((o) => o.orderId === orderId);
+  const paidChanged = updated && Number(updated.amountPaidSoFar) !== Number(previousPaid || 0);
+
+  if (paidChanged || updated.orderStatus === "Completed") {
+    showStatus("Payment confirmed.", "success");
+    return;
   }
+
+  if (attempt < PAYMENT_POLL_DELAYS.length) {
+    setTimeout(() => waitForPaymentOnDashboard(orderId, attempt + 1), PAYMENT_POLL_DELAYS[attempt]);
+    return;
+  }
+
+  showStatus("Still processing your payment. This can take a moment, try Refresh shortly.", "info");
 }
 
 // ---------- Revisits ----------
@@ -417,7 +420,7 @@ async function topupRevisits(orderId, revisitCount, waitArea) {
       return;
     }
 
-    openPaystackPopup(payResult.reference, payResult.amount, payResult.email, waitArea);
+    openPaystackPopup(orderId, payResult.reference, payResult.amount, payResult.email, waitArea);
     showStatus(result.revisitsAdded + " revisit(s) added. Complete payment of " + formatNaira(result.cost) + " in the payment window.", "info");
   } catch (err) {
     showStatus("Something went wrong: " + err.message, "error");

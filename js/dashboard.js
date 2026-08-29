@@ -321,7 +321,7 @@ function openPaystackPopup(reference, amount, email, waitArea) {
   handler.openIframe();
 }
 
-async function confirmPayment(reference, waitArea) {
+async function confirmPayment(reference, waitArea, isRetry) {
   clearStatus();
   showStatus("Confirming your payment...", "info");
   try {
@@ -331,10 +331,16 @@ async function confirmPayment(reference, waitArea) {
     } else {
       showStatus("We couldn't confirm that payment yet. If you completed it, this can take a moment, try Refresh shortly.", "error");
     }
+    loadDashboard();
   } catch (err) {
+    if (!isRetry) {
+      showStatus("Confirming your payment...", "info");
+      setTimeout(() => confirmPayment(reference, waitArea, true), 1500);
+      return;
+    }
     showStatus("Something went wrong confirming payment: " + err.message, "error");
+    loadDashboard();
   }
-  loadDashboard();
 }
 
 // ---------- Revisits ----------

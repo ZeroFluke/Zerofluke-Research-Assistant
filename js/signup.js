@@ -12,6 +12,14 @@ const TEMPLATE_KEYWORDS = [
 let idCheckPassed = false;
 let uploadedFileData = null;
 
+// If someone's already logged in and lands on the signup page, send them
+// straight to their dashboard instead of showing the signup form again.
+document.addEventListener("DOMContentLoaded", function () {
+  if (localStorage.getItem("zf_clientId")) {
+    window.location.href = "dashboard.html";
+  }
+});
+
 function showStatus(message, type) {
   const box = document.getElementById("statusBox");
   box.textContent = message;

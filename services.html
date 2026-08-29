@@ -24,30 +24,30 @@
 <section class="section">
   <div class="container">
     <div class="grid grid-4">
-      <div class="tier-card">
+      <div class="tier-card tier-clickable" data-level="Article">
         <span class="tier-name">Article</span>
         <p class="tier-desc">Publishable-quality research writing.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦15,000<span style="font-size:0.85rem;font-weight:400;color:var(--ink-soft);"> starting</span></div>
+        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦15,000</div>
         <ul class="tier-list">
           <li>Minimum 5 revision rounds</li>
           <li>Standard referencing styles</li>
           <li>PDF drafts, Word + PDF final</li>
         </ul>
       </div>
-      <div class="tier-card">
+      <div class="tier-card tier-clickable" data-level="Undergraduate">
         <span class="tier-name">Undergraduate</span>
         <p class="tier-desc">Final-year project, start to finish.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦35,000<span style="font-size:0.85rem;font-weight:400;color:var(--ink-soft);"> starting</span></div>
+        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦35,000</div>
         <ul class="tier-list">
           <li>Minimum 10 revision rounds</li>
           <li>Standard referencing styles</li>
           <li>PDF drafts, Word + PDF final</li>
         </ul>
       </div>
-      <div class="tier-card featured">
+      <div class="tier-card featured tier-clickable" data-level="Masters">
         <span class="tier-name">Masters</span>
         <p class="tier-desc">Thesis-level research and writing.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦75,000<span style="font-size:0.85rem;font-weight:400;color:var(--ink-soft);"> starting</span></div>
+        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦75,000</div>
         <ul class="tier-list">
           <li>Minimum 10 revision rounds</li>
           <li>Standard referencing styles</li>
@@ -55,10 +55,10 @@
           <li>PDF drafts, Word + PDF final</li>
         </ul>
       </div>
-      <div class="tier-card">
+      <div class="tier-card tier-clickable" data-level="PhD">
         <span class="tier-name">PhD</span>
         <p class="tier-desc">Doctoral research, including fieldwork.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦150,000<span style="font-size:0.85rem;font-weight:400;color:var(--ink-soft);"> starting</span></div>
+        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦150,000</div>
         <ul class="tier-list">
           <li>Minimum 15 revision rounds</li>
           <li>Standard referencing styles</li>
@@ -101,5 +101,16 @@
 
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
+<script>
+  document.querySelectorAll(".tier-clickable").forEach(function (card) {
+    card.addEventListener("click", function () {
+      var level = card.getAttribute("data-level");
+      var loggedIn = !!localStorage.getItem("zf_clientId");
+      window.location.href = loggedIn
+        ? "order.html?level=" + encodeURIComponent(level)
+        : "signup.html";
+    });
+  });
+</script>
 </body>
 </html>

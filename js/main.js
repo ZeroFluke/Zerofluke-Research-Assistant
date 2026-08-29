@@ -131,10 +131,35 @@ function initAppHeader() {
   }
 }
 
+// Wires the public "Contact" nav dropdown (Support / FAQ). Click to open,
+// click outside to close — same interaction as the account menu, so it
+// behaves consistently on both touch and desktop.
+function wireNavDropdowns() {
+  document.querySelectorAll(".nav-dropdown").forEach((dropdown) => {
+    const trigger = dropdown.querySelector(".nav-dropdown-trigger");
+    if (!trigger) return;
+
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.querySelectorAll(".nav-dropdown.open").forEach((d) => {
+        if (d !== dropdown) d.classList.remove("open");
+      });
+      dropdown.classList.toggle("open");
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll(".nav-dropdown.open").forEach((d) => {
+      if (!d.contains(e.target)) d.classList.remove("open");
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   await includePartials();
   setActiveNav();
   wireMobileNav();
+  wireNavDropdowns();
   setFooterYear();
   applySessionNav();
   initAppHeader();

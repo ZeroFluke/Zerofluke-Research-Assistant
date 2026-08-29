@@ -487,6 +487,8 @@ textarea:focus-visible, select:focus-visible {
   flex-direction: column;
   gap: 1rem;
 }
+.tier-clickable { cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.tier-clickable:hover { transform: translateY(-3px); box-shadow: 0 1px 2px rgba(18,24,74,0.06), 0 20px 36px -16px rgba(46,63,209,0.28); }
 .tier-card.featured {
   border-color: var(--gold);
   box-shadow: 0 1px 2px rgba(18,24,74,0.06), 0 18px 34px -14px rgba(198,161,91,0.45);
@@ -536,6 +538,27 @@ textarea:focus-visible, select:focus-visible {
 .field-hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.35rem; }
 
 /* ---------- FAQ accordion ---------- */
+.faq-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.faq-search-row input,
+.faq-search-row select {
+  flex: 1;
+  min-width: 220px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+.faq-search-row input:focus,
+.faq-search-row select:focus { outline: none; border-color: var(--royal-blue); }
+
 .faq-category { margin-bottom: 2.25rem; }
 .faq-category h2 { font-size: var(--step-1); margin-bottom: 0.6rem; }
 .faq-item { border-bottom: 1px solid var(--line); }
@@ -648,6 +671,42 @@ textarea:focus-visible, select:focus-visible {
   color: var(--royal-blue);
   font-size: 1.05rem;
 }
+
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger {
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+.nav-links .nav-dropdown-trigger { color: var(--ink); }
+.nav-links .nav-dropdown-trigger:hover { color: var(--royal-blue); }
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.85rem);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  min-width: 160px;
+  padding: 0.5rem;
+  z-index: 30;
+}
+.nav-dropdown.open .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu a {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.nav-dropdown-menu a:hover { background: var(--sky-blue-pale); color: var(--royal-blue); }
 
 /* ---------- Account menu (dashboard / order header) ---------- */
 .account-menu { position: relative; }

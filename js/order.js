@@ -40,6 +40,14 @@ async function loadConfigAndInit() {
       return;
     }
     pricingConfig = result;
+
+    // If arriving from a Services & Pricing card, pre-select that level —
+    // still fully editable, just a head start.
+    const requestedLevel = new URLSearchParams(window.location.search).get("level");
+    if (requestedLevel && pricingConfig.byLevel[requestedLevel]) {
+      document.getElementById("ord-level").value = requestedLevel;
+    }
+
     onLevelChange();
     recalculate();
     document.getElementById("orderForm").style.display = "";
@@ -167,7 +175,7 @@ document.getElementById("orderForm").addEventListener("submit", submitOrder);
 
 // Info icons: hover works on desktop via CSS; this adds tap-to-toggle for
 // touch devices, and closes the popover when tapping elsewhere.
-["revisitsInfoBtn", "deadlineInfoBtn"].forEach((id) => {
+["revisitsInfoBtn", "deadlineInfoBtn", "topicInfoBtn"].forEach((id) => {
   document.getElementById(id).addEventListener("click", (e) => {
     e.stopPropagation();
     const btn = e.currentTarget;

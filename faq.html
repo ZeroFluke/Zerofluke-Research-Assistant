@@ -21,6 +21,18 @@
   </div>
 </section>
 
+<section class="section" style="padding-bottom:0;">
+  <div class="container" style="max-width:760px;">
+    <div class="faq-search-row">
+      <input type="text" id="faqSearch" placeholder="Search a topic, e.g. &quot;refund&quot; or &quot;revisits&quot;">
+      <select id="faqJump">
+        <option value="">Jump to a topic...</option>
+      </select>
+    </div>
+    <p class="field-hint" id="faqNoResults" style="display:none;">No matching topics. Try a different word, or use the contact form below.</p>
+  </div>
+</section>
+
 <section class="section">
   <div class="container" style="max-width:760px;">
 
@@ -72,7 +84,7 @@
 
       <div class="faq-item">
         <button class="faq-question">What about fieldwork or lab-based work?<span class="faq-caret">&#9662;</span></button>
-        <div class="faq-answer">Flag it as science-based work on the order form. That part is quoted separately, since costs vary a lot case by case. Cost would be provided via email, after market survey.</div>
+        <div class="faq-answer">Flag it as science-based work on the order form. That part is quoted separately, since costs vary a lot case by case. Cost would be provided via your registered email, after market survey.</div>
       </div>
     </div>
 
@@ -160,6 +172,69 @@
       btn.closest(".faq-item").classList.toggle("open");
     });
   });
+
+  // Give every item and category a stable, findable id, and build the
+  // "Jump to a topic" dropdown from the actual page content rather than a
+  // hardcoded list, so it can never drift out of sync with the real FAQ.
+  (function setupFaqSearchAndJump() {
+    const jumpSelect = document.getElementById("faqJump");
+    const searchInput = document.getElementById("faqSearch");
+    const noResults = document.getElementById("faqNoResults");
+    let itemIndex = 0;
+
+    document.querySelectorAll(".faq-category").forEach(function (category) {
+      const categoryName = category.querySelector("h2").textContent;
+      const categoryGroup = document.createElement("optgroup");
+      categoryGroup.label = categoryName;
+
+      category.querySelectorAll(".faq-item").forEach(function (item) {
+        const questionBtn = item.querySelector(".faq-question");
+        const questionText = questionBtn.childNodes[0].textContent.trim();
+        const id = "faq-item-" + (itemIndex++);
+        item.id = id;
+
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = questionText;
+        categoryGroup.appendChild(option);
+      });
+
+      jumpSelect.appendChild(categoryGroup);
+    });
+
+    jumpSelect.addEventListener("change", function () {
+      const id = jumpSelect.value;
+      if (!id) return;
+      const target = document.getElementById(id);
+      target.classList.add("open");
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      jumpSelect.value = "";
+    });
+
+    searchInput.addEventListener("input", function () {
+      const query = searchInput.value.trim().toLowerCase();
+      let anyVisible = false;
+
+      document.querySelectorAll(".faq-category").forEach(function (category) {
+        let categoryHasMatch = false;
+
+        category.querySelectorAll(".faq-item").forEach(function (item) {
+          const text = item.textContent.toLowerCase();
+          const matches = !query || text.includes(query);
+          item.style.display = matches ? "" : "none";
+          if (matches) {
+            categoryHasMatch = true;
+            anyVisible = true;
+            if (query) item.classList.add("open");
+          }
+        });
+
+        category.style.display = categoryHasMatch ? "" : "none";
+      });
+
+      noResults.style.display = anyVisible ? "none" : "block";
+    });
+  })();
 </script>
 </body>
 </html>

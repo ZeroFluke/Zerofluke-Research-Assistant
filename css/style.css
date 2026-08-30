@@ -169,10 +169,14 @@ textarea:focus-visible, select:focus-visible {
 .nav-cta { display: none; align-items: center; gap: 0.75rem; }
 .nav-cta .btn { padding: 0.6rem 1.15rem; font-size: 0.88rem; }
 .nav-login {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  color: var(--deep-navy);
+  color: var(--royal-blue);
+  padding: 0.55rem 1rem;
+  border: 1.5px solid var(--royal-blue);
+  border-radius: 999px;
 }
+.nav-login:hover { background: var(--sky-blue-pale); }
 
 .nav-toggle {
   display: inline-flex;
@@ -208,6 +212,7 @@ textarea:focus-visible, select:focus-visible {
   border-bottom: 1px solid var(--paper-dim);
 }
 .mobile-panel .btn { margin-top: 0.75rem; justify-content: center; }
+#ctaAreaMobile { display: flex; flex-direction: column; }
 
 @media (min-width: 900px) {
   .nav-links { display: flex; }
@@ -765,22 +770,29 @@ textarea:focus-visible, select:focus-visible {
 .nav-dropdown-menu a:hover { background: var(--sky-blue-pale); color: var(--royal-blue); }
 
 /* ---------- Account menu (dashboard / order header) ---------- */
-.account-menu { position: relative; }
+.account-menu { position: relative; display: none; }
+@media (min-width: 900px) { .account-menu { display: block; } }
 .account-trigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: none;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: none;
-  padding: 0.5rem 0.25rem;
-  font-weight: 600;
-  font-size: 0.96rem;
-  color: var(--deep-navy);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.02rem;
   cursor: pointer;
 }
-.account-trigger:hover { color: var(--royal-blue); }
-.account-trigger svg { transition: transform 0.15s ease; color: var(--ink-soft); }
-.account-menu.open .account-trigger svg { transform: rotate(180deg); }
+.account-dropdown-name {
+  padding: 0.6rem 0.75rem 0.5rem;
+  font-weight: 700;
+  color: var(--deep-navy);
+  border-bottom: 1px solid var(--paper-dim);
+  margin-bottom: 0.25rem;
+}
 .account-dropdown {
   display: none;
   position: absolute;

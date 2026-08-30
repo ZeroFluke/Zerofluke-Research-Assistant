@@ -54,6 +54,14 @@ function clearSessionAndRedirect() {
   window.location.href = "index.html";
 }
 
+const AVATAR_COLORS = ["#2E3FD1", "#B98A2E", "#3D8B6A", "#A24E9C", "#C0483A", "#2E7DB9", "#6C5CE0", "#0E7C6B"];
+
+function colorForName(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 function applySessionNav() {
   const clientId = localStorage.getItem("zf_clientId");
   if (!clientId) return;
@@ -65,60 +73,56 @@ function applySessionNav() {
   if (desktopSlot) {
     desktopSlot.innerHTML =
       '<div class="account-menu" id="accountMenu">' +
-      '<button class="account-trigger" id="accountTrigger" aria-expanded="false">' +
-      '<span id="accountFirstName">Account</span>' +
-      '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-      '</button>' +
+      '<button class="account-trigger" id="accountTrigger" aria-expanded="false" aria-label="Account menu"></button>' +
       '<div class="account-dropdown" id="accountDropdown">' +
+      '<div class="account-dropdown-name" id="accountDropdownName"></div>' +
       '<a href="dashboard.html">Dashboard</a>' +
       '<a href="order.html">Place a New Order</a>' +
+      '<a href="faq.html">FAQ</a>' +
       '<a href="contact.html">Lodge a Complaint</a>' +
       '<a href="#" id="appLogoutLink">Log out</a>' +
       '</div>' +
       '</div>';
   }
 
-  // Mobile panel is already an expandable menu, so a flat stacked list reads
-  // better here than nesting another click-to-open dropdown inside it.
+  // Mobile: clear the Log in / Sign up / Place a Request area entirely.
+  // Account actions live in the separate avatar button instead (see
+  // wireMobileAvatar), so the hamburger panel only ever holds site nav.
   const mobileSlot = document.getElementById("ctaAreaMobile");
-  if (mobileSlot) {
-    mobileSlot.innerHTML =
-      '<a href="dashboard.html" data-nav="dashboard">Dashboard</a>' +
-      '<a href="order.html">Place a New Order</a>' +
-      '<a href="contact.html">Lodge a Complaint</a>' +
-      '<a href="#" id="appLogoutLinkMobile">Log out</a>';
+  if (mobileSlot) mobileSlot.innerHTML = "";
 
-    const mobileLogout = document.getElementById("appLogoutLinkMobile");
-    if (mobileLogout) {
-      mobileLogout.addEventListener("click", (e) => {
-        e.preventDefault();
-        clearSessionAndRedirect();
-      });
-    }
+  const fullName = localStorage.getItem("zf_fullName") || "";
+  wireAvatar("mobileAvatarTrigger", "mobileAvatarDropdown", "mobileAvatarName", "mobileAvatarLogout", fullName, true);
+  if (desktopSlot) {
+    wireAvatar("accountTrigger", "accountDropdown", "accountDropdownName", "appLogoutLink", fullName, false);
   }
 }
 
-// Wires the simplified account-menu header used on dashboard.html / order.html.
-// No-ops silently on pages that use the full public header instead.
-function initAppHeader() {
-  const menu = document.getElementById("accountMenu");
-  const trigger = document.getElementById("accountTrigger");
-  const nameEl = document.getElementById("accountFirstName");
-  const logoutLink = document.getElementById("appLogoutLink");
-  if (!menu || !trigger) return;
+function wireAvatar(triggerId, dropdownId, nameId, logoutId, fullName, isMobileVariant) {
+  const trigger = document.getElementById(triggerId);
+  const dropdown = document.getElementById(dropdownId);
+  const nameEl = document.getElementById(nameId);
+  const logoutLink = document.getElementById(logoutId);
+  if (!trigger || !dropdown) return;
 
-  const fullName = localStorage.getItem("zf_fullName");
-  if (nameEl) nameEl.textContent = (fullName || "Account").split(" ")[0];
+  const initial = (fullName.trim().charAt(0) || "?").toUpperCase();
+  trigger.textContent = initial;
+  trigger.style.background = colorForName(fullName || "?");
+  if (isMobileVariant) trigger.classList.add("show");
+  if (nameEl) nameEl.textContent = fullName;
+
+  const menu = isMobileVariant ? dropdown : trigger.closest(".account-menu");
 
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
-    const isOpen = menu.classList.toggle("open");
+    const isOpen = (isMobileVariant ? dropdown : menu).classList.toggle("open");
     trigger.setAttribute("aria-expanded", String(isOpen));
   });
 
   document.addEventListener("click", (e) => {
-    if (!menu.contains(e.target)) {
-      menu.classList.remove("open");
+    const container = isMobileVariant ? dropdown : menu;
+    if (container && !container.contains(e.target) && e.target !== trigger) {
+      container.classList.remove("open");
       trigger.setAttribute("aria-expanded", "false");
     }
   });
@@ -129,6 +133,17 @@ function initAppHeader() {
       clearSessionAndRedirect();
     });
   }
+}
+
+// Wires the simplified account-menu header used on dashboard.html / order.html
+// when it's already present in the page's static HTML (not injected via
+// applySessionNav). No-ops silently when accountMenu isn't on the page.
+function initAppHeader() {
+  const menu = document.getElementById("accountMenu");
+  if (!menu || document.getElementById("ctaAreaDesktop")) return;
+
+  const fullName = localStorage.getItem("zf_fullName") || "";
+  wireAvatar("accountTrigger", "accountDropdown", "accountDropdownName", "appLogoutLink", fullName, false);
 }
 
 // Wires the public "Contact" nav dropdown (Support / FAQ). Click to open,
@@ -170,6 +185,9 @@ function wireInfoIcons() {
   });
 }
 
+const EYE_ON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 7 11 7a20.3 20.3 0 01-3.22 4.19M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
 function wirePasswordToggles() {
   document.querySelectorAll(".password-wrap").forEach((wrap) => {
     const input = wrap.querySelector("input");
@@ -184,9 +202,6 @@ function wirePasswordToggles() {
     });
   });
 }
-
-const EYE_ON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
-const EYE_OFF_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 7 11 7a20.3 20.3 0 01-3.22 4.19M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
 document.addEventListener("DOMContentLoaded", async () => {
   await includePartials();

@@ -27,9 +27,9 @@
       <div class="tier-card tier-clickable" data-level="Article">
         <span class="tier-name">Article</span>
         <p class="tier-desc">Publishable-quality research writing.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦15,000</div>
+        <div id="tierPrice-Article" style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦15,000</div>
         <ul class="tier-list">
-          <li>Minimum 5 revision rounds</li>
+          <li id="tierRevisits-Article">Minimum 5 revision rounds</li>
           <li>Standard referencing styles</li>
           <li>PDF drafts, Word + PDF final</li>
         </ul>
@@ -37,9 +37,9 @@
       <div class="tier-card tier-clickable" data-level="Undergraduate">
         <span class="tier-name">Undergraduate</span>
         <p class="tier-desc">Final-year project, start to finish.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦35,000</div>
+        <div id="tierPrice-Undergraduate" style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦35,000</div>
         <ul class="tier-list">
-          <li>Minimum 10 revision rounds</li>
+          <li id="tierRevisits-Undergraduate">Minimum 10 revision rounds</li>
           <li>Standard referencing styles</li>
           <li>PDF drafts, Word + PDF final</li>
         </ul>
@@ -47,9 +47,9 @@
       <div class="tier-card featured tier-clickable" data-level="Masters">
         <span class="tier-name">Masters</span>
         <p class="tier-desc">Thesis-level research and writing.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦75,000</div>
+        <div id="tierPrice-Masters" style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦75,000</div>
         <ul class="tier-list">
-          <li>Minimum 10 revision rounds</li>
+          <li id="tierRevisits-Masters">Minimum 10 revision rounds</li>
           <li>Standard referencing styles</li>
           <li>Fieldwork quote if science-based</li>
           <li>PDF drafts, Word + PDF final</li>
@@ -58,9 +58,9 @@
       <div class="tier-card tier-clickable" data-level="PhD">
         <span class="tier-name">PhD</span>
         <p class="tier-desc">Doctoral research, including fieldwork.</p>
-        <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦150,000</div>
+        <div id="tierPrice-PhD" style="font-family:var(--font-display);font-size:1.7rem;color:var(--deep-navy);margin:0.4rem 0;">₦150,000</div>
         <ul class="tier-list">
-          <li>Minimum 15 revision rounds</li>
+          <li id="tierRevisits-PhD">Minimum 15 revision rounds</li>
           <li>Standard referencing styles</li>
           <li>Fieldwork quote if science-based</li>
           <li>PDF drafts, Word + PDF final</li>
@@ -102,6 +102,8 @@
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
 <script>
+  const BACKEND_URL = "https://script.google.com/macros/s/AKfycby9I_6Z9l52yG1_GPNvis8gUlmVxKYACNPn9Ai1R01WY3vnY8SXCyc_rqf05EUUF7qU8A/exec";
+
   document.querySelectorAll(".tier-clickable").forEach(function (card) {
     card.addEventListener("click", function () {
       var level = card.getAttribute("data-level");
@@ -111,6 +113,32 @@
         : "signup.html";
     });
   });
+
+  function formatNaira(amount) {
+    return "₦" + Number(amount).toLocaleString("en-NG");
+  }
+
+  fetch(BACKEND_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "getPricingConfig" })
+  })
+    .then(function (res) { return res.json(); })
+    .then(function (config) {
+      ["Article", "Undergraduate", "Masters", "PhD"].forEach(function (level) {
+        var levelConfig = config.byLevel && config.byLevel[level];
+        if (!levelConfig) return;
+
+        var priceEl = document.getElementById("tierPrice-" + level);
+        if (priceEl) priceEl.textContent = formatNaira(levelConfig.basePrice);
+
+        var revisitsEl = document.getElementById("tierRevisits-" + level);
+        if (revisitsEl) revisitsEl.textContent = "Minimum " + levelConfig.minRevisits + " revision rounds";
+      });
+    })
+    .catch(function (err) {
+      console.warn("Could not load live pricing, showing last-known values:", err);
+    });
 </script>
 </body>
 </html>

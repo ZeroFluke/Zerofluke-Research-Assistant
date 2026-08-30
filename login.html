@@ -32,7 +32,10 @@
         </div>
         <div class="field">
           <label for="li-password">Password</label>
-          <input type="password" id="li-password" required>
+          <div class="password-wrap">
+            <input type="password" id="li-password" required>
+            <button type="button" class="password-toggle" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="loginSubmitBtn">Log In</button>
       </form>

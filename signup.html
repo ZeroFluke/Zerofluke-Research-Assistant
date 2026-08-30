@@ -41,11 +41,27 @@
         </div>
         <div class="field">
           <label for="su-password">Password</label>
-          <input type="password" id="su-password" required minlength="8">
+          <div class="password-wrap">
+            <input type="password" id="su-password" required minlength="8">
+            <button type="button" class="password-toggle" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
           <p class="field-hint">At least 8 characters, with a letter and a number.</p>
         </div>
         <div class="field">
-          <label for="su-nin">NIN (11 digits)</label>
+          <label for="su-password-confirm">Confirm password</label>
+          <div class="password-wrap">
+            <input type="password" id="su-password-confirm" required minlength="8">
+            <button type="button" class="password-toggle" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <p class="field-hint" id="passwordMatchHint" style="display:none;color:var(--danger);">Passwords do not match.</p>
+        </div>
+        <div class="field">
+          <div class="field-label-row">
+            <label for="su-nin" style="margin-bottom:0;">NIN (11 digits)</label>
+            <button type="button" class="info-icon" id="ninInfoBtn">i
+              <span class="info-popover" id="ninHint">Identity documents provided are used only to verify a client's name and ID number. The document is not uploaded to our server and does not leave this environment.</span>
+            </button>
+          </div>
           <input type="text" id="su-nin" required maxlength="11" pattern="\d{11}" inputmode="numeric">
         </div>
         <div class="field">

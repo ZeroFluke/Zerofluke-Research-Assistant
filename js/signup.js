@@ -39,15 +39,6 @@ function callBackend(payload) {
   }).then((res) => res.json());
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 // Converts the raw uploaded photo to a cleaned-up grayscale, contrast-boosted
 // version before OCR. Tesseract reads printed ID text far more reliably off
 // this than off a raw, full-color phone photo (glare, colored background,
@@ -189,6 +180,7 @@ async function handleSignupSubmit() {
   const email = document.getElementById("su-email").value.trim();
   const phone = document.getElementById("su-phone").value.trim();
   const password = document.getElementById("su-password").value;
+  const passwordConfirm = document.getElementById("su-password-confirm").value;
   const nin = document.getElementById("su-nin").value.trim();
   const idFile = document.getElementById("su-id-photo").files[0];
 
@@ -202,6 +194,11 @@ async function handleSignupSubmit() {
       showStatus("Password must be at least 8 characters, with a letter and a number.", "error");
       return;
     }
+  }
+
+  if (!window.pendingGoogleSignup && password !== passwordConfirm) {
+    showStatus("Passwords do not match.", "error");
+    return;
   }
 
   if (!idFile) {
@@ -225,24 +222,6 @@ async function handleSignupSubmit() {
     return;
   }
 
-  submitBtn.textContent = "Uploading ID...";
-
-  const base64Data = await fileToBase64(idFile);
-  const uploadResult = await callBackend({
-    action: "uploadFile",
-    fileName: idFile.name,
-    mimeType: idFile.type,
-    base64Data: base64Data,
-    folderName: "ZeroFluke ID Verification"
-  });
-
-  if (!uploadResult.success) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Create Account";
-    showStatus("There was a problem uploading your ID. Please try again.", "error");
-    return;
-  }
-
   submitBtn.textContent = "Creating account...";
 
   const signupResult = await callBackend({
@@ -253,7 +232,6 @@ async function handleSignupSubmit() {
     password: password,
     nin: nin,
     idType: "NIN",
-    idPhotoDriveLink: uploadResult.fileUrl,
     idCheckPassed: true,
     signupMethod: window.pendingGoogleSignup ? "Google" : "Form"
   });
@@ -301,6 +279,8 @@ function handleGoogleCredentialResponse(response) {
         document.getElementById("su-email").readOnly = true;
         document.getElementById("su-password").closest(".field").style.display = "none";
         document.getElementById("su-password").required = false;
+        document.getElementById("su-password-confirm").closest(".field").style.display = "none";
+        document.getElementById("su-password-confirm").required = false;
         window.pendingGoogleSignup = true;
       } else {
         localStorage.setItem("zf_clientId", result.clientId);

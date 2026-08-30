@@ -173,19 +173,4 @@ document.getElementById("ord-deadline").addEventListener("input", recalculate);
 document.getElementById("ord-science").addEventListener("change", recalculate);
 document.getElementById("orderForm").addEventListener("submit", submitOrder);
 
-// Info icons: hover works on desktop via CSS; this adds tap-to-toggle for
-// touch devices, and closes the popover when tapping elsewhere.
-["revisitsInfoBtn", "deadlineInfoBtn", "topicInfoBtn"].forEach((id) => {
-  document.getElementById(id).addEventListener("click", (e) => {
-    e.stopPropagation();
-    const btn = e.currentTarget;
-    const wasOpen = btn.classList.contains("open");
-    document.querySelectorAll(".info-icon.open").forEach((el) => el.classList.remove("open"));
-    if (!wasOpen) btn.classList.add("open");
-  });
-});
-document.addEventListener("click", () => {
-  document.querySelectorAll(".info-icon.open").forEach((el) => el.classList.remove("open"));
-});
-
 document.addEventListener("DOMContentLoaded", loadConfigAndInit);

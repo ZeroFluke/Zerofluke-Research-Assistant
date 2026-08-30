@@ -169,14 +169,10 @@ textarea:focus-visible, select:focus-visible {
 .nav-cta { display: none; align-items: center; gap: 0.75rem; }
 .nav-cta .btn { padding: 0.6rem 1.15rem; font-size: 0.88rem; }
 .nav-login {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--royal-blue);
-  padding: 0.55rem 1rem;
-  border: 1.5px solid var(--royal-blue);
-  border-radius: 999px;
+  color: var(--deep-navy);
 }
-.nav-login:hover { background: var(--sky-blue-pale); }
 
 .nav-toggle {
   display: inline-flex;
@@ -212,63 +208,13 @@ textarea:focus-visible, select:focus-visible {
   border-bottom: 1px solid var(--paper-dim);
 }
 .mobile-panel .btn { margin-top: 0.75rem; justify-content: center; }
-#ctaAreaMobile { display: flex; flex-direction: column; }
 
 @media (min-width: 900px) {
   .nav-links { display: flex; }
   .nav-cta { display: flex; }
   .nav-toggle { display: none; }
   .mobile-panel { display: none !important; }
-  .mobile-avatar-wrap { display: none !important; }
-  .mobile-avatar, .mobile-avatar-dropdown { display: none !important; }
 }
-
-.mobile-avatar {
-  display: none;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: none;
-  color: var(--paper);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 1rem;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.mobile-avatar.show { display: inline-flex; }
-.mobile-avatar-dropdown {
-  display: none;
-  position: absolute;
-  right: 1rem;
-  top: 62px;
-  z-index: 40;
-  min-width: 200px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(18,24,74,0.12);
-  padding: 0.5rem;
-}
-.mobile-avatar-dropdown.open { display: block; }
-.mobile-avatar-name {
-  padding: 0.6rem 0.75rem 0.5rem;
-  font-weight: 700;
-  color: var(--deep-navy);
-  border-bottom: 1px solid var(--paper-dim);
-  margin-bottom: 0.25rem;
-}
-.mobile-avatar-dropdown a {
-  display: block;
-  padding: 0.65rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  color: var(--ink);
-}
-.mobile-avatar-dropdown a:hover { background: var(--paper-dim); }
-.mobile-avatar-dropdown a#mobileAvatarLogout { color: var(--danger); border-top: 1px solid var(--paper-dim); margin-top: 0.25rem; padding-top: 0.75rem; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -576,6 +522,22 @@ textarea:focus-visible, select:focus-visible {
 
 /* ---------- Form basics (used by later phases) ---------- */
 .field { margin-bottom: 1.25rem; }
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 2.75rem; }
+.password-toggle {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+}
+.password-toggle:hover { color: var(--royal-blue); }
 .field label {
   display: block;
   font-size: 0.85rem;
@@ -771,29 +733,22 @@ textarea:focus-visible, select:focus-visible {
 .nav-dropdown-menu a:hover { background: var(--sky-blue-pale); color: var(--royal-blue); }
 
 /* ---------- Account menu (dashboard / order header) ---------- */
-.account-menu { position: relative; display: none; }
-@media (min-width: 900px) { .account-menu { display: block; } }
+.account-menu { position: relative; }
 .account-trigger {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  gap: 0.35rem;
+  background: none;
   border: none;
-  color: var(--paper);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 1.02rem;
+  padding: 0.5rem 0.25rem;
+  font-weight: 600;
+  font-size: 0.96rem;
+  color: var(--deep-navy);
   cursor: pointer;
 }
-.account-dropdown-name {
-  padding: 0.6rem 0.75rem 0.5rem;
-  font-weight: 700;
-  color: var(--deep-navy);
-  border-bottom: 1px solid var(--paper-dim);
-  margin-bottom: 0.25rem;
-}
+.account-trigger:hover { color: var(--royal-blue); }
+.account-trigger svg { transition: transform 0.15s ease; color: var(--ink-soft); }
+.account-menu.open .account-trigger svg { transform: rotate(180deg); }
 .account-dropdown {
   display: none;
   position: absolute;

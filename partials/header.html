@@ -26,9 +26,19 @@
       </div>
     </div>
 
-    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
-      <span></span>
-    </button>
+    <div style="position:relative;display:flex;align-items:center;gap:0.6rem;">
+      <button class="mobile-avatar" id="mobileAvatarTrigger" aria-expanded="false" aria-label="Account menu"></button>
+      <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+      </button>
+      <div class="mobile-avatar-dropdown" id="mobileAvatarDropdown">
+        <div class="mobile-avatar-name" id="mobileAvatarName"></div>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="order.html">Place a New Order</a>
+        <a href="contact.html">Lodge a Complaint</a>
+        <a href="#" id="mobileAvatarLogout">Log out</a>
+      </div>
+    </div>
   </div>
 
   <div class="mobile-panel container" id="mobilePanel">

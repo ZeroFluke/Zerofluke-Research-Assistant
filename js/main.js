@@ -54,6 +54,14 @@ function clearSessionAndRedirect() {
   window.location.href = "index.html";
 }
 
+const AVATAR_COLORS = ["#2E3FD1", "#B98A2E", "#3D8B6A", "#A24E9C", "#C0483A", "#2E7DB9", "#6C5CE0", "#0E7C6B"];
+
+function colorForName(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 function applySessionNav() {
   const clientId = localStorage.getItem("zf_clientId");
   if (!clientId) return;
@@ -78,23 +86,44 @@ function applySessionNav() {
       '</div>';
   }
 
-  // Mobile panel is already an expandable menu, so a flat stacked list reads
-  // better here than nesting another click-to-open dropdown inside it.
-  const mobileSlot = document.getElementById("ctaAreaMobile");
-  if (mobileSlot) {
-    mobileSlot.innerHTML =
-      '<a href="dashboard.html" data-nav="dashboard">Dashboard</a>' +
-      '<a href="order.html">Place a New Order</a>' +
-      '<a href="contact.html">Lodge a Complaint</a>' +
-      '<a href="#" id="appLogoutLinkMobile">Log out</a>';
+  // Mobile: no-op here, ctaAreaMobile stays empty for signed-in users.
+  // Account actions live in the separate avatar button instead (see
+  // wireMobileAvatar), so the hamburger panel only ever holds site nav.
+  const fullName = localStorage.getItem("zf_fullName") || "";
+  wireMobileAvatar(fullName);
+}
 
-    const mobileLogout = document.getElementById("appLogoutLinkMobile");
-    if (mobileLogout) {
-      mobileLogout.addEventListener("click", (e) => {
-        e.preventDefault();
-        clearSessionAndRedirect();
-      });
+function wireMobileAvatar(fullName) {
+  const trigger = document.getElementById("mobileAvatarTrigger");
+  const dropdown = document.getElementById("mobileAvatarDropdown");
+  const nameEl = document.getElementById("mobileAvatarName");
+  const logoutLink = document.getElementById("mobileAvatarLogout");
+  if (!trigger || !dropdown) return;
+
+  const initial = (fullName.trim().charAt(0) || "?").toUpperCase();
+  trigger.textContent = initial;
+  trigger.style.background = colorForName(fullName || "?");
+  trigger.classList.add("show");
+  if (nameEl) nameEl.textContent = fullName;
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.toggle("open");
+    trigger.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target) && e.target !== trigger) {
+      dropdown.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
     }
+  });
+
+  if (logoutLink) {
+    logoutLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      clearSessionAndRedirect();
+    });
   }
 }
 

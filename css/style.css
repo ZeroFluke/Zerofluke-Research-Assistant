@@ -219,6 +219,7 @@ textarea:focus-visible, select:focus-visible {
   .nav-cta { display: flex; }
   .nav-toggle { display: none; }
   .mobile-panel { display: none !important; }
+  .mobile-avatar-wrap { display: none !important; }
   .mobile-avatar, .mobile-avatar-dropdown { display: none !important; }
 }
 

@@ -53,6 +53,12 @@ async function loadConfigAndInit() {
     onLevelChange();
     recalculate();
     document.getElementById("orderForm").style.display = "";
+
+    const requestedType = new URLSearchParams(window.location.search).get("type");
+    if (requestedType === "check") {
+      document.getElementById("toggleCheckBtn").click();
+    }
+
     document.getElementById("formLoading").style.display = "none";
   } catch (err) {
     showStatus("Could not reach the server. Please refresh.", "error");

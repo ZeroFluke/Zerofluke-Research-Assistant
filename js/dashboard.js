@@ -592,18 +592,21 @@ function buildCheckOrderCardHtml(co) {
       '<input type="file" accept=".pdf,.doc,.docx" required>' +
       '<button type="submit" class="btn btn-outline-dark">Upload Document</button>' +
       '</form>';
-  } else if (co.orderStatus === "Ongoing") {
+  } else if (co.orderStatus === "Ongoing" || co.orderStatus === "Report Ready") {
     const targetPassed = co.targetCompletion && new Date(co.targetCompletion).getTime() < Date.now();
-    actionsHtml =
-      (targetPassed
+    const targetLine =
+      co.orderStatus === "Report Ready"
+        ? '<p class="field-hint">Your report is ready below.</p>'
+        : targetPassed
         ? '<p class="field-hint">Taking a little longer than usual, our team is still on it. This won\'t take more than 12 hours in total, we\'ll notify you the moment it\'s ready.</p>'
-        : '<p class="field-hint">Expected by ' + formatDateTime(co.targetCompletion) + '.</p>') +
-      '<div class="order-actions"><button class="btn btn-ghost" data-caction="update" style="color:var(--royal-blue);border-color:var(--line);">Request Update</button></div>';
-  } else if (co.orderStatus === "Report Ready") {
+        : '<p class="field-hint">Expected by ' + formatDateTime(co.targetCompletion) + '.</p>';
+
     actionsHtml =
+      targetLine +
       '<div class="order-actions">' +
-      (co.reportFileLink ? '<a href="' + co.reportFileLink + '" target="_blank" class="btn btn-outline-dark">Download Report</a>' : "") +
-      '<button class="btn btn-ghost" data-caction="complete" style="color:var(--deep-navy);border-color:var(--line);">Order Completed?</button>' +
+      (co.orderStatus === "Report Ready" && co.reportFileLink ? '<a href="' + co.reportFileLink + '" target="_blank" class="btn btn-outline-dark">Download Report</a>' : "") +
+      (co.orderStatus === "Report Ready" ? '<button class="btn btn-ghost" data-caction="complete" style="color:var(--deep-navy);border-color:var(--line);">Order Completed?</button>' : "") +
+      '<button class="btn btn-ghost" data-caction="update" style="color:var(--royal-blue);border-color:var(--line);">Request Update</button>' +
       '</div>';
   } else if (co.orderStatus === "Completed") {
     actionsHtml = '<div class="order-actions">' +

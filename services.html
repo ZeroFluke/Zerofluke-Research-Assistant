@@ -73,6 +73,14 @@
     <p class="text-center field-hint">
       Final pricing reflects your chosen revisits and deadline on the request form. Science-based work also includes a separate fieldwork quote.
     </p>
+
+    <a href="#" id="checkInfoCard" class="check-info-card">
+      <div>
+        <span class="tier-name">Plagiarism &amp; AI Detection Check</span>
+        <p class="tier-desc" style="margin-top:0.3rem;">Not writing with us but want peace of mind before you submit? We check your work with Turnitin, the same standard universities use, and get results back to you within 2 hours.</p>
+      </div>
+      <span class="check-info-arrow">&#8594;</span>
+    </a>
   </div>
 </section>
 
@@ -112,6 +120,12 @@
         ? "order.html?level=" + encodeURIComponent(level)
         : "signup.html";
     });
+  });
+
+  document.getElementById("checkInfoCard").addEventListener("click", function (e) {
+    e.preventDefault();
+    var loggedIn = !!localStorage.getItem("zf_clientId");
+    window.location.href = loggedIn ? "order.html?type=check" : "signup.html";
   });
 
   function formatNaira(amount) {

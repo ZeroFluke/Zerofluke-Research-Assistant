@@ -463,6 +463,11 @@ textarea:focus-visible, select:focus-visible {
 .order-type-toggle { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border: 1px solid var(--line); border-radius: 10px; padding: 0.3rem; }
 .order-type-toggle .toggle-btn { flex: 1; border: none; background: transparent; padding: 0.6rem 1rem; border-radius: 7px; font-weight: 600; font-size: 0.92rem; color: var(--ink-soft); cursor: pointer; }
 .order-type-toggle .toggle-btn.active { background: var(--royal-blue); color: #fff; }
+.check-info-card { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 1.75rem; padding: 1.5rem 2rem; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-dim); text-decoration: none; color: inherit; transition: border-color 0.15s ease, transform 0.15s ease; }
+.check-info-card:hover { border-color: var(--royal-blue); transform: translateY(-2px); }
+.check-info-card .tier-desc { color: var(--ink-soft); max-width: 46rem; }
+.check-info-arrow { font-size: 1.6rem; color: var(--royal-blue); flex-shrink: 0; }
+@media (max-width: 640px) { .check-info-card { flex-direction: column; align-items: flex-start; } }
 .order-meta-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

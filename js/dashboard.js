@@ -173,7 +173,7 @@ function buildOrderCardHtml(order) {
       '</div>' +
       '</div>' +
       '<div class="order-actions">' +
-      '<button class="btn btn-ghost" data-action="satisfactory" style="color:var(--deep-navy);border-color:var(--line);">Mark as Satisfactory</button>' +
+      '<button class="btn btn-ghost" data-action="satisfactory" style="color:var(--deep-navy);border-color:var(--line);">Order Completed?</button>' +
       '<button class="btn btn-ghost" data-action="request-update" style="color:var(--royal-blue);border-color:var(--line);">Request Update</button>' +
       (Number(order.amountPaidSoFar) > 0
         ? '<button class="btn btn-ghost" data-action="withdraw" style="color:var(--danger);border-color:var(--line);">Withdraw / Request Refund</button>'
@@ -409,7 +409,7 @@ async function topupRevisits(orderId, revisitCount) {
 
 async function markSatisfactory(orderId) {
   clearStatus();
-  if (!confirm("Mark this order as satisfactory? This closes the order.")) return;
+  if (!confirm("Order Completed? This closes the order.")) return;
 
   try {
     const result = await callBackend({ action: "markSatisfactory", orderId: orderId, clientId: zfClientId });
@@ -538,10 +538,216 @@ document.getElementById("withdrawConfirmBtn").addEventListener("click", async ()
   loadDashboard();
 });
 
+// ---------- Plagiarism & AI Checks ----------
+let currentCheckOrders = [];
+
+function checkStatusClass(status) {
+  if (status === "Ongoing") return "ongoing";
+  if (status === "Completed") return "completed";
+  if (status === "Report Ready") return "ongoing";
+  return "pending";
+}
+
+function formatDateTime(value) {
+  if (!value) return "—";
+  const dt = new Date(value);
+  if (isNaN(dt.getTime())) return "—";
+  return dt.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+async function loadCheckOrders() {
+  const container = document.getElementById("checkOrdersContainer");
+  try {
+    const result = await callBackend({ action: "getCheckOrders", clientId: zfClientId });
+    if (!result.success) {
+      container.innerHTML = '<div class="dashboard-empty"><p>Could not load your checks right now.</p></div>';
+      return;
+    }
+    currentCheckOrders = result.checkOrders || [];
+    renderCheckOrders();
+  } catch (err) {
+    container.innerHTML = '<div class="dashboard-empty"><p>Could not load your checks right now.</p></div>';
+    console.error(err);
+  }
+}
+
+function renderCheckOrders() {
+  const container = document.getElementById("checkOrdersContainer");
+  if (!currentCheckOrders.length) {
+    container.innerHTML = '<div class="dashboard-empty"><p>No plagiarism or AI checks yet.</p></div>';
+    return;
+  }
+  container.innerHTML = currentCheckOrders.map(buildCheckOrderCardHtml).join("");
+  currentCheckOrders.forEach(wireCheckOrderCard);
+}
+
+function buildCheckOrderCardHtml(co) {
+  let actionsHtml = "";
+
+  if (co.orderStatus === "Requested") {
+    actionsHtml = '<div class="order-actions"><button class="btn btn-primary" data-caction="pay">Pay to Continue</button></div>';
+  } else if (co.orderStatus === "Paid") {
+    actionsHtml =
+      '<form data-caction="upload" style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;">' +
+      '<input type="file" accept=".pdf,.doc,.docx" required>' +
+      '<button type="submit" class="btn btn-outline-dark">Upload Document</button>' +
+      '</form>';
+  } else if (co.orderStatus === "Ongoing") {
+    const targetPassed = co.targetCompletion && new Date(co.targetCompletion).getTime() < Date.now();
+    actionsHtml =
+      (targetPassed
+        ? '<p class="field-hint">Taking a little longer than usual, our team is still on it. This won\'t take more than 12 hours in total, we\'ll notify you the moment it\'s ready.</p>'
+        : '<p class="field-hint">Expected by ' + formatDateTime(co.targetCompletion) + '.</p>') +
+      '<div class="order-actions"><button class="btn btn-ghost" data-caction="update" style="color:var(--royal-blue);border-color:var(--line);">Request Update</button></div>';
+  } else if (co.orderStatus === "Report Ready") {
+    actionsHtml =
+      '<div class="order-actions">' +
+      (co.reportFileLink ? '<a href="' + co.reportFileLink + '" target="_blank" class="btn btn-outline-dark">Download Report</a>' : "") +
+      '<button class="btn btn-ghost" data-caction="complete" style="color:var(--deep-navy);border-color:var(--line);">Order Completed?</button>' +
+      '</div>';
+  } else if (co.orderStatus === "Completed") {
+    actionsHtml = '<div class="order-actions">' +
+      (co.reportFileLink ? '<a href="' + co.reportFileLink + '" target="_blank" class="btn btn-outline-dark">Download Report</a>' : '<p class="field-hint" style="margin:0;">Completed.</p>') +
+      '</div>';
+  }
+
+  return (
+    '<div class="order-card" data-check-id="' + co.checkId + '">' +
+    '<div class="order-card-head">' +
+    '<div><h3 style="margin-bottom:0.15rem;">' + co.checkTypes + ' Check</h3>' +
+    (co.exclusions ? '<p class="field-hint" style="margin:0;">Exclusions: ' + co.exclusions + '</p>' : "") + '</div>' +
+    '<span class="status-pill ' + checkStatusClass(co.orderStatus) + '">' + co.orderStatus + '</span>' +
+    '</div>' +
+    '<div class="order-meta-grid"><div><div class="label">Amount</div><div class="value">' + formatNaira(co.amount) + '</div></div></div>' +
+    actionsHtml +
+    '</div>'
+  );
+}
+
+function wireCheckOrderCard(co) {
+  const card = document.querySelector('.order-card[data-check-id="' + co.checkId + '"]');
+  if (!card) return;
+
+  const payBtn = card.querySelector('[data-caction="pay"]');
+  if (payBtn) payBtn.addEventListener("click", () => startCheckPayment(co.checkId));
+
+  const updateBtn = card.querySelector('[data-caction="update"]');
+  if (updateBtn) updateBtn.addEventListener("click", () => requestCheckUpdate(co.checkId));
+
+  const completeBtn = card.querySelector('[data-caction="complete"]');
+  if (completeBtn) completeBtn.addEventListener("click", () => markCheckCompleted(co.checkId));
+
+  const uploadForm = card.querySelector('form[data-caction="upload"]');
+  if (uploadForm) {
+    uploadForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const file = uploadForm.querySelector('input[type="file"]').files[0];
+      if (file) uploadCheckDocument(co.checkId, file);
+    });
+  }
+}
+
+async function startCheckPayment(checkId) {
+  clearStatus();
+  try {
+    const result = await callBackend({ action: "initializeCheckPayment", checkId: checkId, clientId: zfClientId, email: currentEmail });
+    if (!result.success) {
+      showStatus(result.error, "error");
+      return;
+    }
+    const handler = PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: result.email,
+      amount: Math.round(result.amount * 100),
+      ref: result.reference,
+      callback: function (response) {
+        confirmCheckPayment(response.reference);
+      },
+      onClose: function () {
+        showStatus("Payment window closed. No charge was made.", "info");
+      }
+    });
+    handler.openIframe();
+  } catch (err) {
+    showStatus("Something went wrong starting payment: " + err.message, "error");
+  }
+}
+
+async function confirmCheckPayment(reference) {
+  showStatus("Confirming your payment...", "info");
+  try {
+    const result = await callBackend({ action: "verifyPayment", reference: reference });
+    showStatus(result.success ? "Payment confirmed." : "We couldn't confirm that payment yet, try Refresh shortly.", result.success ? "success" : "error");
+  } catch (err) {
+    showStatus("Something went wrong confirming payment: " + err.message, "error");
+  }
+  loadCheckOrders();
+}
+
+async function uploadCheckDocument(checkId, file) {
+  clearStatus();
+  showStatus("Uploading your document...", "info");
+  try {
+    const base64Data = await fileToBase64(file);
+    const uploadResult = await callBackend({
+      action: "uploadFile",
+      fileName: file.name,
+      mimeType: file.type,
+      base64Data: base64Data,
+      folderName: "ZeroFluke Check Documents"
+    });
+    if (!uploadResult.success) {
+      showStatus("There was a problem uploading that file. Please try again.", "error");
+      return;
+    }
+    const result = await callBackend({
+      action: "uploadCheckDocument",
+      checkId: checkId,
+      clientId: zfClientId,
+      documentLink: uploadResult.fileUrl
+    });
+    showStatus(result.success ? "Document uploaded. Your check is now in progress." : result.error, result.success ? "success" : "error");
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+  }
+  loadCheckOrders();
+}
+
+async function requestCheckUpdate(checkId) {
+  clearStatus();
+  if (!confirm("Send a request for an update on this check? Our team will reply by email.")) return;
+  try {
+    const result = await callBackend({
+      action: "submitComplaint",
+      name: localStorage.getItem("zf_fullName") || "",
+      email: localStorage.getItem("zf_email") || "",
+      topic: "Order status/complaint",
+      relatedOrderId: checkId,
+      message: "I'd like an update on the progress of this plagiarism/AI check."
+    });
+    showStatus(result.success ? "Update request sent. We'll reply by email soon." : result.error, result.success ? "success" : "error");
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+  }
+}
+
+async function markCheckCompleted(checkId) {
+  clearStatus();
+  if (!confirm("Order Completed? This closes the order.")) return;
+  try {
+    const result = await callBackend({ action: "markCheckCompleted", checkId: checkId, clientId: zfClientId });
+    showStatus(result.success ? "Order marked as completed. Thank you." : result.error, result.success ? "success" : "error");
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+  }
+  loadCheckOrders();
+}
+
 async function initDashboardPage() {
   await loadRevisitFee();
   await loadDashboard();
+  await loadCheckOrders();
 }
 
-document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
+document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", () => { loadDashboard(); loadCheckOrders(); });
 document.addEventListener("DOMContentLoaded", initDashboardPage);

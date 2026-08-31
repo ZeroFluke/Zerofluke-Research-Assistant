@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body data-page="order">
 
@@ -17,7 +18,12 @@
   <div class="container" style="max-width:760px;">
 
     <h1 style="font-size:var(--step-2);margin-bottom:0.2rem;">Place a new request</h1>
-    <p class="field-hint" style="margin-bottom:1.5rem;">Pricing updates as you fill this in. Nothing is charged until you confirm on your dashboard.</p>
+    <p class="field-hint" style="margin-bottom:1.5rem;">Pricing updates as you fill this in. Nothing is charged until you confirm.</p>
+
+    <div class="order-type-toggle">
+      <button type="button" class="toggle-btn active" id="toggleResearchBtn">Research Order</button>
+      <button type="button" class="toggle-btn" id="toggleCheckBtn">Plagiarism &amp; AI Check</button>
+    </div>
 
     <div id="statusBox" class="status-box"></div>
 
@@ -32,6 +38,8 @@
           <option value="Undergraduate">Undergraduate Project</option>
           <option value="Masters">Masters</option>
           <option value="PhD">PhD</option>
+          <option value="Postgraduate Seminar">Postgraduate Seminar Paper</option>
+          <option value="Professional Masters">Professional Masters</option>
         </select>
       </div>
 
@@ -111,6 +119,49 @@
       </div>
 
       <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="submitBtn">Place Request</button>
+    </form>
+
+    <form id="checkForm" style="display:none;">
+
+      <div class="field">
+        <label style="margin-bottom:0.6rem;">What do you need checked?</label>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;margin-bottom:0.5rem;">
+          <input type="checkbox" id="chk-plagiarism" style="width:auto;"> Plagiarism check
+        </label>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;">
+          <input type="checkbox" id="chk-ai" style="width:auto;"> AI content detection
+        </label>
+      </div>
+
+      <div class="field" id="exclusionsField" style="display:none;">
+        <div class="field-label-row">
+          <label style="margin-bottom:0;">Exclusions</label>
+          <button type="button" class="info-icon" id="exclusionsInfoBtn">i
+            <span class="info-popover">Pick whatever your university's plagiarism policy tells you to exclude. Most schools exclude the bibliography and directly quoted text by default; some also exclude preliminary pages (cover page, table of contents, etc). If you're not sure, check your school's research handbook or ask your supervisor before submitting.</span>
+          </button>
+        </div>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;margin-bottom:0.4rem;">
+          <input type="checkbox" id="excl-bibliography" style="width:auto;"> Bibliography
+        </label>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;margin-bottom:0.4rem;">
+          <input type="checkbox" id="excl-quotes" style="width:auto;"> Quotes
+        </label>
+        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;">
+          <input type="checkbox" id="excl-prelim" style="width:auto;"> Preliminary pages
+        </label>
+      </div>
+
+      <div class="field">
+        <label for="chk-file">Upload your document</label>
+        <input type="file" id="chk-file" accept=".pdf,.doc,.docx" required>
+        <p class="field-hint" id="chkTurnaroundNote"></p>
+      </div>
+
+      <div class="order-meta-grid" style="background:var(--paper-dim);border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1.25rem;">
+        <div><div class="label">Total</div><div class="value" id="chkTotal" style="color:var(--royal-blue);">₦0</div></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" id="chkSubmitBtn">Continue to Payment</button>
     </form>
 
   </div>

@@ -540,6 +540,26 @@ document.getElementById("withdrawConfirmBtn").addEventListener("click", async ()
 
 // ---------- Plagiarism & AI Checks ----------
 let currentCheckOrders = [];
+let currentCheckFilter = "All";
+
+function checkOrderTimestamp(checkId) {
+  return Number(String(checkId).replace(/^CK/, "")) || 0;
+}
+
+function getFilteredCheckOrders() {
+  const sorted = [...currentCheckOrders].sort((a, b) => checkOrderTimestamp(b.checkId) - checkOrderTimestamp(a.checkId));
+  if (currentCheckFilter === "All") return sorted;
+  return sorted.filter((o) => o.orderStatus === currentCheckFilter);
+}
+
+document.querySelectorAll(".check-filter-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    currentCheckFilter = tab.dataset.filter;
+    document.querySelectorAll(".check-filter-tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    renderCheckOrders();
+  });
+});
 
 function checkStatusClass(status) {
   if (status === "Ongoing") return "ongoing";
@@ -564,6 +584,9 @@ async function loadCheckOrders() {
       return;
     }
     currentCheckOrders = result.checkOrders || [];
+    if (currentCheckOrders.length) {
+      document.getElementById("checkFilterRow").style.display = "flex";
+    }
     renderCheckOrders();
   } catch (err) {
     container.innerHTML = '<div class="dashboard-empty"><p>Could not load your checks right now.</p></div>';
@@ -573,12 +596,13 @@ async function loadCheckOrders() {
 
 function renderCheckOrders() {
   const container = document.getElementById("checkOrdersContainer");
-  if (!currentCheckOrders.length) {
+  const filtered = getFilteredCheckOrders();
+  if (!filtered.length) {
     container.innerHTML = '<div class="dashboard-empty"><p>No plagiarism or AI checks yet.</p></div>';
     return;
   }
-  container.innerHTML = currentCheckOrders.map(buildCheckOrderCardHtml).join("");
-  currentCheckOrders.forEach(wireCheckOrderCard);
+  container.innerHTML = filtered.map(buildCheckOrderCardHtml).join("");
+  filtered.forEach(wireCheckOrderCard);
 }
 
 function buildCheckOrderCardHtml(co) {

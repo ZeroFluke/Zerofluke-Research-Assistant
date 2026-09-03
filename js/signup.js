@@ -1,17 +1,6 @@
 const BACKEND_URL = "https://script.google.com/macros/s/AKfycby9I_6Z9l52yG1_GPNvis8gUlmVxKYACNPn9Ai1R01WY3vnY8SXCyc_rqf05EUUF7qU8A/exec";
 const GOOGLE_CLIENT_ID = "305149507909-stpai58m35c6tmjjfr4cclgojjrau068.apps.googleusercontent.com";
 
-const TEMPLATE_KEYWORDS = [
-  "FEDERAL REPUBLIC OF NIGERIA",
-  "NATIONAL IDENTIFICATION NUMBER",
-  "NATIONAL IDENTITY MANAGEMENT",
-  "NIMC",
-  "DIGITAL NIN SLIP"
-];
-
-let idCheckPassed = false;
-let uploadedFileData = null;
-
 // If someone's already logged in and lands on the signup page, send them
 // straight to their dashboard instead of showing the signup form again.
 document.addEventListener("DOMContentLoaded", function () {
@@ -39,126 +28,6 @@ function callBackend(payload) {
   }).then((res) => res.json());
 }
 
-// Converts the raw uploaded photo to a cleaned-up grayscale, contrast-boosted
-// version before OCR. Tesseract reads printed ID text far more reliably off
-// this than off a raw, full-color phone photo (glare, colored background,
-// small text all hurt accuracy otherwise).
-function preprocessImageForOcr(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      // Cap max dimension so very large phone photos don't slow Tesseract down,
-      // but upscale small/cropped images so text is still readable.
-      const maxDim = 1600;
-      let { width, height } = img;
-      const scale = Math.min(maxDim / Math.max(width, height), 1) || 1;
-      const targetW = Math.round(width * (width > maxDim ? scale : 1));
-      const targetH = Math.round(height * (height > maxDim ? scale : 1));
-
-      const canvas = document.createElement("canvas");
-      canvas.width = targetW || width;
-      canvas.height = targetH || height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      const contrast = 1.35; // mild boost, keeps genuine text edges crisp
-
-      for (let i = 0; i < data.length; i += 4) {
-        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-        const adjusted = (gray - 128) * contrast + 128;
-        const clamped = Math.max(0, Math.min(255, adjusted));
-        data[i] = data[i + 1] = data[i + 2] = clamped;
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error("Could not process image."));
-        }
-      }, "image/jpeg", 0.95);
-    };
-    img.onerror = () => reject(new Error("Could not load image for processing."));
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-async function runOcrCheck(file, fullName, nin) {
-  const ocrStatus = document.getElementById("ocrStatus");
-  ocrStatus.textContent = "Checking your ID, this can take a few seconds...";
-
-  let ocrInput = file;
-  try {
-    ocrInput = await preprocessImageForOcr(file);
-  } catch (err) {
-    // If preprocessing fails for any reason, fall back to the raw file
-    // rather than blocking signup entirely.
-    console.warn("Image preprocessing failed, using original photo:", err);
-    ocrInput = file;
-  }
-
-  const result = await Tesseract.recognize(ocrInput, "eng");
-  const text = result.data.text.toUpperCase();
-  const textDigitsOnly = text.replace(/\D/g, "");
-
-  const ninDigitsOnly = nin.replace(/\D/g, "");
-  const ninMatch = fuzzyDigitMatch(textDigitsOnly, ninDigitsOnly);
-
-  const nameWords = fullName.toUpperCase().split(/\s+/).filter((w) => w.length >= 3);
-  const nameMatch = nameWords.some((w) => text.includes(w));
-
-  const templateFragments = ["NIGERIA", "IDENTIFICATION", "IDENTITY", "NIMC", "NIN"];
-  const templateMatch = templateFragments.filter((f) => text.includes(f)).length >= 2;
-
-  // templateMatch only confirms this is *a* NIN document (these words appear on
-  // every NIN card, real or not). It can never substitute for the NIN or name
-  // actually matching this specific person, so it is a gate, not a vote.
-  // ninMatch and nameMatch are both mandatory: the number and name typed must
-  // actually be readable on the card uploaded.
-  idCheckPassed = templateMatch && ninMatch && nameMatch;
-
-  if (idCheckPassed) {
-    ocrStatus.textContent = "ID looks good.";
-  } else if (!templateMatch) {
-    ocrStatus.textContent = "This doesn't look like a NIN card. Please upload a clear photo of your NIN slip or card.";
-  } else if (!ninMatch) {
-    ocrStatus.textContent = "The NIN number entered doesn't match what we can read on the card. Please check both and try again.";
-  } else {
-    ocrStatus.textContent = "The name entered doesn't match what we can read on the card. Please check both and try again.";
-  }
-
-  return idCheckPassed;
-}
-
-function fuzzyDigitMatch(haystack, needle) {
-  if (haystack.includes(needle)) {
-    return true;
-  }
-  if (needle.length < 8) {
-    return false;
-  }
-  let bestMatchLength = 0;
-  for (let start = 0; start <= needle.length - 6; start++) {
-    for (let len = needle.length - start; len >= 6; len--) {
-      const chunk = needle.substring(start, start + len);
-      if (haystack.includes(chunk) && len > bestMatchLength) {
-        bestMatchLength = len;
-      }
-    }
-  }
-  return bestMatchLength >= Math.floor(needle.length * 0.7);
-}
-
-document.getElementById("su-id-photo").addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  if (file) {
-    document.getElementById("fileUploadName").textContent = file.name;
-  }
-});
-
 document.getElementById("signupForm").addEventListener("submit", async function (e) {
   e.preventDefault();
   clearStatus();
@@ -181,11 +50,9 @@ async function handleSignupSubmit() {
   const phone = document.getElementById("su-phone").value.trim();
   const password = document.getElementById("su-password").value;
   const passwordConfirm = document.getElementById("su-password-confirm").value;
-  const nin = document.getElementById("su-nin").value.trim();
-  const idFile = document.getElementById("su-id-photo").files[0];
 
-  if (!/^\d{11}$/.test(nin)) {
-    showStatus("NIN must be exactly 11 digits.", "error");
+  if (!/^\d{7,15}$/.test(phone)) {
+    showStatus("Please enter a valid phone number.", "error");
     return;
   }
 
@@ -201,27 +68,8 @@ async function handleSignupSubmit() {
     return;
   }
 
-  if (!idFile) {
-    showStatus("Please upload your NIN photo.", "error");
-    return;
-  }
-
   const submitBtn = document.getElementById("submitBtn");
   submitBtn.disabled = true;
-  submitBtn.textContent = "Checking ID...";
-
-  const passed = await runOcrCheck(idFile, fullName, nin);
-
-  if (!passed) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Create Account";
-    showStatus(
-      "We couldn't verify your ID against what you entered. If you believe this is a mistake, please contact us.",
-      "error"
-    );
-    return;
-  }
-
   submitBtn.textContent = "Creating account...";
 
   const signupResult = await callBackend({
@@ -230,9 +78,6 @@ async function handleSignupSubmit() {
     email: email,
     phone: phone,
     password: password,
-    nin: nin,
-    idType: "NIN",
-    idCheckPassed: true,
     signupMethod: window.pendingGoogleSignup ? "Google" : "Form"
   });
 
@@ -270,7 +115,7 @@ function handleGoogleCredentialResponse(response) {
 
       if (result.isNewUser) {
         showStatus(
-          "Almost done, " + result.fullName + ". Please fill in your NIN and upload your ID below to finish signing up.",
+          "Almost done, " + result.fullName + ". Please add a working phone number to finish signing up.",
           "info"
         );
         document.getElementById("su-name").value = result.fullName;

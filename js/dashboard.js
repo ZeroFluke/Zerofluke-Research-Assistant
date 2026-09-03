@@ -9,6 +9,7 @@ let currentOrders = [];
 let currentEmail = localStorage.getItem("zf_email") || "";
 let revisitFee = 0;
 let currentFilter = "All";
+const SPECIAL_LEVELS = ["Proofreading", "Literature Review"];
 
 function callBackend(payload) {
   return fetch(BACKEND_URL, {
@@ -85,11 +86,15 @@ async function loadDashboard() {
 
     document.getElementById("welcomeHeading").textContent = "Welcome Back, " + result.fullName.split(" ")[0];
 
-    if (currentOrders.length) {
+    if (currentOrders.some((o) => !SPECIAL_LEVELS.includes(o.academicLevel))) {
       document.getElementById("filterRow").style.display = "flex";
+    }
+    if (currentOrders.some((o) => SPECIAL_LEVELS.includes(o.academicLevel))) {
+      document.getElementById("specialFilterRow").style.display = "flex";
     }
 
     renderOrders(getFilteredOrders());
+    renderSpecialOrders(getFilteredSpecialOrders());
   } catch (err) {
     container.innerHTML = '<div class="dashboard-empty"><p>Could not load your dashboard right now. Please refresh.</p></div>';
     console.error(err);
@@ -101,19 +106,54 @@ function orderTimestamp(orderId) {
 }
 
 function getFilteredOrders() {
-  const sorted = [...currentOrders].sort((a, b) => orderTimestamp(b.orderId) - orderTimestamp(a.orderId));
+  const sorted = [...currentOrders]
+    .filter((o) => !SPECIAL_LEVELS.includes(o.academicLevel))
+    .sort((a, b) => orderTimestamp(b.orderId) - orderTimestamp(a.orderId));
   if (currentFilter === "All") return sorted;
   return sorted.filter((o) => o.orderStatus === currentFilter);
 }
 
-document.querySelectorAll(".filter-tab").forEach((tab) => {
+document.querySelectorAll(".research-filter-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     currentFilter = tab.dataset.filter;
-    document.querySelectorAll(".filter-tab").forEach((t) => t.classList.remove("active"));
+    document.querySelectorAll(".research-filter-tab").forEach((t) => t.classList.remove("active"));
     tab.classList.add("active");
     renderOrders(getFilteredOrders());
   });
 });
+
+let currentSpecialFilter = "All";
+
+function getFilteredSpecialOrders() {
+  const sorted = [...currentOrders]
+    .filter((o) => SPECIAL_LEVELS.includes(o.academicLevel))
+    .sort((a, b) => orderTimestamp(b.orderId) - orderTimestamp(a.orderId));
+  if (currentSpecialFilter === "All") return sorted;
+  return sorted.filter((o) => o.orderStatus === currentSpecialFilter);
+}
+
+document.querySelectorAll(".special-filter-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    currentSpecialFilter = tab.dataset.filter;
+    document.querySelectorAll(".special-filter-tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    renderSpecialOrders(getFilteredSpecialOrders());
+  });
+});
+
+function renderSpecialOrders(orders) {
+  const container = document.getElementById("specialOrdersContainer");
+
+  if (!orders.length) {
+    container.innerHTML =
+      '<div class="dashboard-empty"><p>No proofreading or literature review orders yet.</p>' +
+      '<a href="order.html" class="btn btn-primary" style="margin-top:1rem;">Place a special order</a></div>';
+    return;
+  }
+
+  container.innerHTML = orders.map(buildOrderCardHtml).join("");
+  orders.forEach((order) => wireOrderCard(order));
+}
 
 function renderOrders(orders) {
   const container = document.getElementById("ordersContainer");
@@ -770,19 +810,29 @@ async function markCheckCompleted(checkId) {
   loadCheckOrders();
 }
 
-// ---------- Toggle between Research Orders and Plagiarism/AI Checks ----------
+// ---------- Toggle between Research Orders, Special Orders, and Plagiarism/AI Checks ----------
+function showOnlyDashboardSection(sectionId) {
+  ["researchOrdersSection", "specialOrdersSection", "checkOrdersSection"].forEach((id) => {
+    document.getElementById(id).style.display = id === sectionId ? "" : "none";
+  });
+  ["toggleResearchOrdersBtn", "toggleSpecialOrdersBtn", "toggleCheckOrdersBtn"].forEach((id) => {
+    document.getElementById(id).classList.remove("active");
+  });
+}
+
 document.getElementById("toggleResearchOrdersBtn").addEventListener("click", () => {
+  showOnlyDashboardSection("researchOrdersSection");
   document.getElementById("toggleResearchOrdersBtn").classList.add("active");
-  document.getElementById("toggleCheckOrdersBtn").classList.remove("active");
-  document.getElementById("researchOrdersSection").style.display = "";
-  document.getElementById("checkOrdersSection").style.display = "none";
+});
+
+document.getElementById("toggleSpecialOrdersBtn").addEventListener("click", () => {
+  showOnlyDashboardSection("specialOrdersSection");
+  document.getElementById("toggleSpecialOrdersBtn").classList.add("active");
 });
 
 document.getElementById("toggleCheckOrdersBtn").addEventListener("click", () => {
+  showOnlyDashboardSection("checkOrdersSection");
   document.getElementById("toggleCheckOrdersBtn").classList.add("active");
-  document.getElementById("toggleResearchOrdersBtn").classList.remove("active");
-  document.getElementById("checkOrdersSection").style.display = "";
-  document.getElementById("researchOrdersSection").style.display = "none";
 });
 
 async function initDashboardPage() {

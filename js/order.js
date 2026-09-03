@@ -181,24 +181,6 @@ document.getElementById("ord-deadline").addEventListener("input", recalculate);
 document.getElementById("ord-science").addEventListener("change", recalculate);
 document.getElementById("orderForm").addEventListener("submit", submitOrder);
 
-// ---------- Toggle between Research Order and Plagiarism/AI Check ----------
-document.getElementById("toggleResearchBtn").addEventListener("click", () => {
-  document.getElementById("toggleResearchBtn").classList.add("active");
-  document.getElementById("toggleCheckBtn").classList.remove("active");
-  document.getElementById("orderForm").style.display = "";
-  document.getElementById("checkForm").style.display = "none";
-  clearStatus();
-});
-
-document.getElementById("toggleCheckBtn").addEventListener("click", () => {
-  document.getElementById("toggleCheckBtn").classList.add("active");
-  document.getElementById("toggleResearchBtn").classList.remove("active");
-  document.getElementById("orderForm").style.display = "none";
-  document.getElementById("checkForm").style.display = "";
-  clearStatus();
-  recalculateCheck();
-});
-
 // ---------- Plagiarism/AI check: exclusions visibility + live price ----------
 function recalculateCheck() {
   if (!pricingConfig || !pricingConfig.checkPricing) return;
@@ -370,5 +352,231 @@ async function finishCheckPaymentAndUpload(reference, checkId, file, btn) {
 }
 
 document.getElementById("checkForm").addEventListener("submit", submitCheckOrder);
+
+// ---------- Toggle: Research / Check / Special ----------
+function showOnlyOrderForm(formId) {
+  ["orderForm", "checkForm", "specialForm"].forEach((id) => {
+    document.getElementById(id).style.display = id === formId ? "" : "none";
+  });
+  ["toggleResearchBtn", "toggleCheckBtn", "toggleSpecialBtn"].forEach((id) => {
+    document.getElementById(id).classList.remove("active");
+  });
+  clearStatus();
+}
+
+document.getElementById("toggleResearchBtn").addEventListener("click", () => {
+  showOnlyOrderForm("orderForm");
+  document.getElementById("toggleResearchBtn").classList.add("active");
+});
+
+document.getElementById("toggleCheckBtn").addEventListener("click", () => {
+  showOnlyOrderForm("checkForm");
+  document.getElementById("toggleCheckBtn").classList.add("active");
+  recalculateCheck();
+});
+
+document.getElementById("toggleSpecialBtn").addEventListener("click", () => {
+  showOnlyOrderForm("specialForm");
+  document.getElementById("toggleSpecialBtn").classList.add("active");
+  onSpecialTypeChange();
+});
+
+// ---------- Special Order: Proofreading / Literature Review ----------
+let currentSpecialType = "Proofreading";
+
+const PROOFREADING_ATTEST =
+  "I confirm the uploaded document is my own work, formatted in Times New Roman, 12pt, double-spaced. I understand documents that don't meet this requirement may be retained while ZeroFluke Research Assistant follows up with me, subject to ZeroFluke Research Assistant's terms.";
+const STANDARD_ATTEST =
+  "I confirm the details above are accurate and I understand this work is for my own academic use, subject to ZeroFluke Research Assistant's terms.";
+
+function calculateTieredPrice(quantity, tier1Rate, tier2Rate, tier3Rate) {
+  if (quantity <= 50) return quantity * tier1Rate;
+  if (quantity <= 100) return 50 * tier1Rate + (quantity - 50) * tier2Rate;
+  return 50 * tier1Rate + 50 * tier2Rate + (quantity - 100) * tier3Rate;
+}
+
+function getSpecialTimelineFloor() {
+  const config = pricingConfig.specialOrders[currentSpecialType];
+  if (currentSpecialType === "Literature Review") {
+    const level = document.getElementById("sp-lr-level").value;
+    return config.timelineByLevel[level] || { standardTimeline: 0, deadlineFloor: 0 };
+  }
+  return { standardTimeline: config.standardTimeline, deadlineFloor: config.deadlineFloor };
+}
+
+function onSpecialTypeChange() {
+  if (!pricingConfig) return;
+  const config = pricingConfig.specialOrders[currentSpecialType];
+  const isProofreading = currentSpecialType === "Proofreading";
+
+  document.getElementById("sp-file-field").style.display = isProofreading ? "" : "none";
+  document.getElementById("sp-file").required = isProofreading;
+  document.getElementById("sp-lr-level-field").style.display = isProofreading ? "none" : "";
+  document.getElementById("sp-quantity-label").textContent = isProofreading ? "Number of pages" : "Number of works to be reviewed";
+  document.getElementById("sp-attest-text").textContent = isProofreading ? PROOFREADING_ATTEST : STANDARD_ATTEST;
+
+  const { standardTimeline, deadlineFloor } = getSpecialTimelineFloor();
+  const revisitsInput = document.getElementById("sp-revisits");
+  const deadlineInput = document.getElementById("sp-deadline");
+
+  revisitsInput.min = config.minRevisits;
+  revisitsInput.max = config.minRevisits + pricingConfig.maxExtraRevisits;
+  revisitsInput.value = config.minRevisits;
+
+  deadlineInput.min = deadlineFloor;
+  deadlineInput.value = standardTimeline;
+
+  document.getElementById("spRevisitsHint").textContent =
+    "A revisit is when we revise your work after you upload feedback. Minimum " + config.minRevisits + " revisits are included. You can add up to " + pricingConfig.maxExtraRevisits + " more now, each costing " + formatNaira(pricingConfig.revisitFee) + ".";
+  document.getElementById("spDeadlineHint").textContent =
+    "Standard delivery is " + standardTimeline + " days. Asking for it sooner adds " + pricingConfig.urgencyPercent + "% of the base price for every day earlier than standard. It cannot be shorter than " + deadlineFloor + " days, even at extra cost.";
+
+  recalculateSpecial();
+}
+
+function recalculateSpecial() {
+  if (!pricingConfig || !pricingConfig.specialOrders) return;
+
+  const config = pricingConfig.specialOrders[currentSpecialType];
+  const quantity = Number(document.getElementById("sp-quantity").value) || 0;
+  const basePrice = calculateTieredPrice(quantity, config.tier1Rate, config.tier2Rate, config.tier3Rate);
+
+  const { standardTimeline } = getSpecialTimelineFloor();
+  const revisitsPurchased = Number(document.getElementById("sp-revisits").value) || config.minRevisits;
+  const requestedDeadlineDays = Number(document.getElementById("sp-deadline").value) || standardTimeline;
+
+  const extraRevisits = Math.max(0, revisitsPurchased - config.minRevisits);
+  const extraRevisitsCost = extraRevisits * pricingConfig.revisitFee;
+
+  const daysShorter = Math.max(0, standardTimeline - requestedDeadlineDays);
+  const urgencyCost = basePrice * (pricingConfig.urgencyPercent / 100) * daysShorter;
+
+  const totalPrice = basePrice + extraRevisitsCost + urgencyCost;
+
+  document.getElementById("spSumBase").textContent = formatNaira(basePrice);
+  document.getElementById("spSumRevisits").textContent = formatNaira(extraRevisitsCost);
+  document.getElementById("spSumUrgency").textContent = formatNaira(urgencyCost);
+  document.getElementById("spSumTotal").textContent = formatNaira(totalPrice);
+}
+
+document.getElementById("specialSubProofreadingBtn").addEventListener("click", () => {
+  currentSpecialType = "Proofreading";
+  document.getElementById("specialSubProofreadingBtn").classList.add("active");
+  document.getElementById("specialSubLitReviewBtn").classList.remove("active");
+  onSpecialTypeChange();
+});
+
+document.getElementById("specialSubLitReviewBtn").addEventListener("click", () => {
+  currentSpecialType = "Literature Review";
+  document.getElementById("specialSubLitReviewBtn").classList.add("active");
+  document.getElementById("specialSubProofreadingBtn").classList.remove("active");
+  onSpecialTypeChange();
+});
+
+document.getElementById("sp-lr-level").addEventListener("change", onSpecialTypeChange);
+document.getElementById("sp-quantity").addEventListener("input", recalculateSpecial);
+document.getElementById("sp-revisits").addEventListener("input", recalculateSpecial);
+document.getElementById("sp-deadline").addEventListener("input", recalculateSpecial);
+
+async function submitSpecialOrder(e) {
+  e.preventDefault();
+  clearStatus();
+
+  const fieldProgramme = document.getElementById("sp-field").value.trim();
+  const topic = document.getElementById("sp-topic").value.trim();
+  const institution = document.getElementById("sp-institution").value.trim();
+  const referencingStyle = document.getElementById("sp-referencing").value;
+  const quantity = Number(document.getElementById("sp-quantity").value);
+  const revisitsPurchased = Number(document.getElementById("sp-revisits").value);
+  const requestedDeadlineDays = Number(document.getElementById("sp-deadline").value);
+  const attestationAccepted = document.getElementById("sp-attest").checked;
+
+  if (!fieldProgramme || !topic || !referencingStyle || !quantity || quantity < 1) {
+    showStatus("Please fill in every required field.", "error");
+    return;
+  }
+  if (!attestationAccepted) {
+    showStatus("You must accept the attestation to place an order.", "error");
+    return;
+  }
+
+  let documentFile = null;
+  let literatureReviewFor = "";
+
+  if (currentSpecialType === "Proofreading") {
+    documentFile = document.getElementById("sp-file").files[0];
+    if (!documentFile) {
+      showStatus("Please upload the document to be proofread.", "error");
+      return;
+    }
+  } else {
+    literatureReviewFor = document.getElementById("sp-lr-level").value;
+    if (!literatureReviewFor) {
+      showStatus("Please specify which academic level this literature review is for.", "error");
+      return;
+    }
+  }
+
+  const btn = document.getElementById("spSubmitBtn");
+  btn.disabled = true;
+  btn.textContent = documentFile ? "Uploading document..." : "Placing your request...";
+
+  try {
+    let specialOrderDocumentLink = "";
+
+    if (documentFile) {
+      const base64Data = await fileToBase64(documentFile);
+      const uploadResult = await callBackend({
+        action: "uploadFile",
+        fileName: documentFile.name,
+        mimeType: documentFile.type,
+        base64Data: base64Data,
+        folderName: "ZeroFluke Proofreading Documents"
+      });
+      if (!uploadResult.success) {
+        showStatus("Could not upload the document. Please try again.", "error");
+        btn.disabled = false;
+        btn.textContent = "Place Request";
+        return;
+      }
+      specialOrderDocumentLink = uploadResult.fileUrl;
+    }
+
+    btn.textContent = "Placing your request...";
+
+    const result = await callBackend({
+      action: "createOrder",
+      clientId: zfClientId,
+      academicLevel: currentSpecialType,
+      fieldProgramme: fieldProgramme,
+      topic: topic,
+      institution: institution,
+      referencingStyle: referencingStyle,
+      isScience: false,
+      revisitsPurchased: revisitsPurchased,
+      requestedDeadlineDays: requestedDeadlineDays,
+      attestationAccepted: attestationAccepted,
+      specialOrderQuantity: quantity,
+      specialOrderDocumentLink: specialOrderDocumentLink,
+      literatureReviewFor: literatureReviewFor
+    });
+
+    if (!result.success) {
+      showStatus(result.error, "error");
+      btn.disabled = false;
+      btn.textContent = "Place Request";
+      return;
+    }
+
+    showStatus("Request placed. Total: " + formatNaira(result.totalPrice) + ". Taking you to your dashboard to pay...", "success");
+    setTimeout(() => { window.location.href = "dashboard.html"; }, 1800);
+  } catch (err) {
+    showStatus("Something went wrong: " + err.message, "error");
+    btn.disabled = false;
+    btn.textContent = "Place Request";
+  }
+}
+
+document.getElementById("specialForm").addEventListener("submit", submitSpecialOrder);
 
 document.addEventListener("DOMContentLoaded", loadConfigAndInit);

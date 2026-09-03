@@ -770,6 +770,21 @@ async function markCheckCompleted(checkId) {
   loadCheckOrders();
 }
 
+// ---------- Toggle between Research Orders and Plagiarism/AI Checks ----------
+document.getElementById("toggleResearchOrdersBtn").addEventListener("click", () => {
+  document.getElementById("toggleResearchOrdersBtn").classList.add("active");
+  document.getElementById("toggleCheckOrdersBtn").classList.remove("active");
+  document.getElementById("researchOrdersSection").style.display = "";
+  document.getElementById("checkOrdersSection").style.display = "none";
+});
+
+document.getElementById("toggleCheckOrdersBtn").addEventListener("click", () => {
+  document.getElementById("toggleCheckOrdersBtn").classList.add("active");
+  document.getElementById("toggleResearchOrdersBtn").classList.remove("active");
+  document.getElementById("checkOrdersSection").style.display = "";
+  document.getElementById("researchOrdersSection").style.display = "none";
+});
+
 async function initDashboardPage() {
   await loadRevisitFee();
   await loadDashboard();

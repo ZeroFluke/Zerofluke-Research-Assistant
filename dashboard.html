@@ -30,30 +30,38 @@
 
     <div id="statusBox" class="status-box"></div>
 
-    <div class="filter-row" id="filterRow" style="display:none;">
-      <button class="filter-tab active" data-filter="All">All</button>
-      <button class="filter-tab" data-filter="Request Pending">Pending</button>
-      <button class="filter-tab" data-filter="Ongoing">Ongoing</button>
-      <button class="filter-tab" data-filter="Completed">Completed</button>
-      <button class="filter-tab" data-filter="Cancelled">Cancelled</button>
+    <div class="order-type-toggle">
+      <button type="button" class="toggle-btn active" id="toggleResearchOrdersBtn">Research Orders</button>
+      <button type="button" class="toggle-btn" id="toggleCheckOrdersBtn">Plagiarism &amp; AI Checks</button>
     </div>
 
-    <div id="ordersContainer">
-      <div class="dashboard-empty">
-        <p>Loading your orders...</p>
+    <div id="researchOrdersSection">
+      <div class="filter-row" id="filterRow" style="display:none;">
+        <button class="filter-tab active" data-filter="All">All</button>
+        <button class="filter-tab" data-filter="Request Pending">Pending</button>
+        <button class="filter-tab" data-filter="Ongoing">Ongoing</button>
+        <button class="filter-tab" data-filter="Completed">Completed</button>
+        <button class="filter-tab" data-filter="Cancelled">Cancelled</button>
+      </div>
+
+      <div id="ordersContainer">
+        <div class="dashboard-empty">
+          <p>Loading your orders...</p>
+        </div>
       </div>
     </div>
 
-    <h2 style="font-size:var(--step-1);margin:2.5rem 0 1rem;">Plagiarism &amp; AI Checks</h2>
-    <div class="filter-row" id="checkFilterRow" style="display:none;">
-      <button class="filter-tab check-filter-tab active" data-filter="All">All</button>
-      <button class="filter-tab check-filter-tab" data-filter="Requested">Requested</button>
-      <button class="filter-tab check-filter-tab" data-filter="Paid">Paid</button>
-      <button class="filter-tab check-filter-tab" data-filter="Ongoing">Ongoing</button>
-      <button class="filter-tab check-filter-tab" data-filter="Report Ready">Report Ready</button>
-      <button class="filter-tab check-filter-tab" data-filter="Completed">Completed</button>
+    <div id="checkOrdersSection" style="display:none;">
+      <div class="filter-row" id="checkFilterRow" style="display:none;">
+        <button class="filter-tab check-filter-tab active" data-filter="All">All</button>
+        <button class="filter-tab check-filter-tab" data-filter="Requested">Requested</button>
+        <button class="filter-tab check-filter-tab" data-filter="Paid">Paid</button>
+        <button class="filter-tab check-filter-tab" data-filter="Ongoing">Ongoing</button>
+        <button class="filter-tab check-filter-tab" data-filter="Report Ready">Report Ready</button>
+        <button class="filter-tab check-filter-tab" data-filter="Completed">Completed</button>
+      </div>
+      <div id="checkOrdersContainer"></div>
     </div>
-    <div id="checkOrdersContainer"></div>
 
   </div>
 </section>

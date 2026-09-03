@@ -83,7 +83,7 @@ async function loadDashboard() {
     localStorage.setItem("zf_fullName", result.fullName);
     localStorage.setItem("zf_email", result.email);
 
-    document.getElementById("welcomeHeading").textContent = "Welcome back, " + result.fullName.split(" ")[0];
+    document.getElementById("welcomeHeading").textContent = "Welcome Back, " + result.fullName.split(" ")[0];
 
     if (currentOrders.length) {
       document.getElementById("filterRow").style.display = "flex";

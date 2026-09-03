@@ -460,6 +460,7 @@ textarea:focus-visible, select:focus-visible {
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
+.card-outline-blue { border: 1.5px solid var(--royal-blue); }
 .order-type-toggle { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border: 1px solid var(--line); border-radius: 10px; padding: 0.3rem; }
 .order-type-toggle .toggle-btn { flex: 1; border: none; background: transparent; padding: 0.6rem 1rem; border-radius: 7px; font-weight: 600; font-size: 0.92rem; color: var(--ink-soft); cursor: pointer; }
 .order-type-toggle .toggle-btn.active { background: var(--royal-blue); color: #fff; }
@@ -526,7 +527,8 @@ textarea:focus-visible, select:focus-visible {
 .grid { display: grid; gap: 1.75rem; }
 .grid-3 { grid-template-columns: 1fr; }
 .grid-4 { grid-template-columns: 1fr; }
-@media (min-width: 640px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+.grid-2 { grid-template-columns: 1fr; max-width: 54rem; margin-inline: auto; }
+@media (min-width: 640px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 980px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } .grid-4 { grid-template-columns: repeat(4, 1fr); } }
 
 .card {
@@ -862,6 +864,8 @@ textarea:focus-visible, select:focus-visible {
   grid-template-columns: repeat(2, 1fr);
 }
 @media (min-width: 760px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+.stat-grid-2 { max-width: 34rem; margin-inline: auto; }
+@media (min-width: 760px) { .stat-grid-2 { grid-template-columns: repeat(2, 1fr); } }
 .stat-block { text-align: center; }
 .stat-block .stat-num {
   font-family: var(--font-display);

@@ -836,9 +836,11 @@ document.getElementById("toggleCheckOrdersBtn").addEventListener("click", () => 
 });
 
 async function initDashboardPage() {
-  await loadRevisitFee();
-  await loadDashboard();
-  await loadCheckOrders();
+  // These three don't depend on each other's results, so fire them
+  // together instead of waiting on each one in turn — cuts total wait
+  // time down to roughly the slowest single call instead of the sum
+  // of all three.
+  await Promise.all([loadRevisitFee(), loadDashboard(), loadCheckOrders()]);
 }
 
 document.getElementById("refreshBtn") && document.getElementById("refreshBtn").addEventListener("click", () => { loadDashboard(); loadCheckOrders(); });

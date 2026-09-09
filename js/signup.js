@@ -1,6 +1,18 @@
 const BACKEND_URL = "https://script.google.com/macros/s/AKfycby9I_6Z9l52yG1_GPNvis8gUlmVxKYACNPn9Ai1R01WY3vnY8SXCyc_rqf05EUUF7qU8A/exec";
 const GOOGLE_CLIENT_ID = "305149507909-stpai58m35c6tmjjfr4cclgojjrau068.apps.googleusercontent.com";
 
+let phoneIti = null;
+document.addEventListener("DOMContentLoaded", function () {
+  const phoneInput = document.getElementById("su-phone");
+  if (phoneInput && window.intlTelInput) {
+    phoneIti = window.intlTelInput(phoneInput, {
+      initialCountry: "ng",
+      separateDialCode: true,
+      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+    });
+  }
+});
+
 // If someone's already logged in and lands on the signup page, send them
 // straight to their dashboard instead of showing the signup form again.
 document.addEventListener("DOMContentLoaded", function () {
@@ -47,14 +59,17 @@ async function handleSignupSubmit() {
 
   const fullName = document.getElementById("su-name").value.trim();
   const email = document.getElementById("su-email").value.trim();
-  const phone = document.getElementById("su-phone").value.trim();
   const password = document.getElementById("su-password").value;
   const passwordConfirm = document.getElementById("su-password-confirm").value;
 
-  if (!/^\d{7,15}$/.test(phone)) {
-    showStatus("Please enter a valid phone number.", "error");
+  const phoneErrorHint = document.getElementById("phoneErrorHint");
+  if (!phoneIti || !phoneIti.isValidNumber()) {
+    if (phoneErrorHint) phoneErrorHint.style.display = "block";
+    showStatus("Please enter a valid phone number for the selected country.", "error");
     return;
   }
+  if (phoneErrorHint) phoneErrorHint.style.display = "none";
+  const phone = phoneIti.getNumber(); // full international format, e.g. +2348012345678
 
   if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
     if (!window.pendingGoogleSignup) {

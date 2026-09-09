@@ -191,7 +191,11 @@ function buildOrderCardHtml(order) {
       '<button class="btn btn-ghost" data-action="cancel" style="color:var(--danger);border-color:var(--line);">Cancel Request</button>' +
       '</div>';
   } else if (order.orderStatus === "Ongoing") {
+    const workReady = balanceOutstanding && (order.finalWordFileLink || order.finalPdfFileLink);
     actionsHtml =
+      (workReady
+        ? '<div class="work-ready-banner"><p><strong>Your work is ready.</strong> Please settle your outstanding balance below to complete this order and receive your files.</p></div>'
+        : "") +
       (balanceOutstanding
         ? '<div class="order-actions"><button class="btn btn-primary" data-action="pay" data-type="Balance-30">Pay Balance (30%)</button></div>'
         : "") +
@@ -300,8 +304,6 @@ function wireOrderCard(order) {
         showStatus("Enter how many revisits you'd like to add.", "error");
         return;
       }
-      const costText = revisitFee ? " at " + formatNaira(count * revisitFee) : "";
-      if (!confirm("Add " + count + " revisit(s)" + costText + "? This will open payment for that amount.")) return;
       topupRevisits(order.orderId, count);
     });
   }
@@ -341,7 +343,9 @@ async function startPayment(orderId, paymentType) {
       return;
     }
 
-    openPaystackPopup(result.reference, result.amount, result.email);
+    showPaymentConfirmModal(formatNaira(result.amount), () => {
+      openPaystackPopup(result.reference, result.amount, result.email);
+    });
   } catch (err) {
     showStatus("Something went wrong starting payment: " + err.message, "error");
   }
@@ -440,8 +444,10 @@ async function topupRevisits(orderId, revisitCount) {
       return;
     }
 
-    showStatus(result.revisitsAdded + " revisit(s) added. Opening payment for " + formatNaira(result.cost) + "...", "info");
-    openPaystackPopup(payResult.reference, payResult.amount, payResult.email);
+    showStatus(result.revisitsAdded + " revisit(s) added.", "info");
+    showPaymentConfirmModal(formatNaira(payResult.amount), () => {
+      openPaystackPopup(payResult.reference, payResult.amount, payResult.email);
+    });
   } catch (err) {
     showStatus("Something went wrong: " + err.message, "error");
   }
@@ -722,19 +728,21 @@ async function startCheckPayment(checkId) {
       showStatus(result.error, "error");
       return;
     }
-    const handler = PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: result.email,
-      amount: Math.round(result.amount * 100),
-      ref: result.reference,
-      callback: function (response) {
-        confirmCheckPayment(response.reference);
-      },
-      onClose: function () {
-        showStatus("Payment window closed. No charge was made.", "info");
-      }
+    showPaymentConfirmModal(formatNaira(result.amount), () => {
+      const handler = PaystackPop.setup({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: result.email,
+        amount: Math.round(result.amount * 100),
+        ref: result.reference,
+        callback: function (response) {
+          confirmCheckPayment(response.reference);
+        },
+        onClose: function () {
+          showStatus("Payment window closed. No charge was made.", "info");
+        }
+      });
+      handler.openIframe();
     });
-    handler.openIframe();
   } catch (err) {
     showStatus("Something went wrong starting payment: " + err.message, "error");
   }

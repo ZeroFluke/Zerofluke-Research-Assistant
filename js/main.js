@@ -188,6 +188,38 @@ function wireInfoIcons() {
 const EYE_ON_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.3 20.3 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 7 11 7a20.3 20.3 0 01-3.22 4.19M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
+function showPaymentConfirmModal(amountText, onConfirm, onCancel) {
+  const modal = document.getElementById("paymentConfirmModal");
+  if (!modal) {
+    onConfirm();
+    return;
+  }
+
+  const amountEl = document.getElementById("paymentConfirmAmount");
+  const confirmBtn = document.getElementById("paymentConfirmBtn");
+  const cancelBtn = document.getElementById("paymentCancelBtn");
+  if (amountEl) amountEl.textContent = amountText;
+
+  modal.classList.add("open");
+
+  function cleanup() {
+    modal.classList.remove("open");
+    confirmBtn.removeEventListener("click", onConfirmClick);
+    cancelBtn.removeEventListener("click", onCancelClick);
+  }
+  function onConfirmClick() {
+    cleanup();
+    onConfirm();
+  }
+  function onCancelClick() {
+    cleanup();
+    if (onCancel) onCancel();
+  }
+
+  confirmBtn.addEventListener("click", onConfirmClick);
+  cancelBtn.addEventListener("click", onCancelClick);
+}
+
 function wirePasswordToggles() {
   document.querySelectorAll(".password-wrap").forEach((wrap) => {
     const input = wrap.querySelector("input");

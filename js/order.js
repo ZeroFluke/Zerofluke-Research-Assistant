@@ -278,23 +278,29 @@ async function submitCheckOrder(e) {
       return;
     }
 
-    btn.textContent = "Opening payment...";
+    btn.textContent = "Confirm payment amount...";
 
-    const handler = PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
-      email: payResult.email,
-      amount: Math.round(payResult.amount * 100),
-      ref: payResult.reference,
-      callback: function (response) {
-        finishCheckPaymentAndUpload(response.reference, createResult.checkId, file, btn);
-      },
-      onClose: function () {
-        showStatus("Payment window closed. Your order is saved as unpaid, you can pay it from your dashboard.", "info");
-        btn.disabled = false;
-        btn.textContent = "Continue to Payment";
-      }
+    showPaymentConfirmModal(formatNaira(payResult.amount), () => {
+      btn.textContent = "Opening payment...";
+      const handler = PaystackPop.setup({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: payResult.email,
+        amount: Math.round(payResult.amount * 100),
+        ref: payResult.reference,
+        callback: function (response) {
+          finishCheckPaymentAndUpload(response.reference, createResult.checkId, file, btn);
+        },
+        onClose: function () {
+          showStatus("Payment window closed. Your order is saved as unpaid, you can pay it from your dashboard.", "info");
+          btn.disabled = false;
+          btn.textContent = "Continue to Payment";
+        }
+      });
+      handler.openIframe();
+    }, () => {
+      btn.disabled = false;
+      btn.textContent = "Continue to Payment";
     });
-    handler.openIframe();
   } catch (err) {
     showStatus("Something went wrong: " + err.message, "error");
     btn.disabled = false;

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.min.css">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body data-page="signup">
@@ -42,6 +43,7 @@
             </button>
           </div>
           <input type="tel" id="su-phone" required>
+          <p class="field-hint" id="phoneErrorHint" style="display:none;color:var(--danger);">Please enter a valid phone number for the selected country.</p>
         </div>
         <div class="field">
           <label for="su-password">Password</label>
@@ -71,6 +73,7 @@
 
 <div data-include="partials/footer.html"></div>
 <script src="js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInputWithUtils.min.js"></script>
 <script src="js/signup.js"></script>
 </body>
 </html>

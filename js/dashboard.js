@@ -309,7 +309,7 @@ function wireOrderCard(order) {
   }
 }
 
-const PAYSTACK_PUBLIC_KEY = "pk_live_729954424859e576f6da8c0dc29a7bc144e2c1b3";
+const PAYSTACK_PUBLIC_KEY = "pk_test_cddc8c3744db3437e87cf07597f4a7cc0411cb91";
 
 function openPaystackPopup(reference, amount, email) {
   const handler = PaystackPop.setup({

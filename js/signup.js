@@ -14,10 +14,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // If someone's already logged in and lands on the signup page, send them
-// straight to their dashboard instead of showing the signup form again.
+// home instead of showing the signup form again.
 document.addEventListener("DOMContentLoaded", function () {
   if (localStorage.getItem("zf_clientId")) {
-    window.location.href = "dashboard.html";
+    window.location.href = "index.html";
   }
 });
 
@@ -104,9 +104,9 @@ async function handleSignupSubmit() {
       localStorage.setItem("zf_clientId", signupResult.clientId);
       localStorage.setItem("zf_fullName", signupResult.fullName);
       localStorage.setItem("zf_email", signupResult.email);
-      showStatus("Account created. Redirecting to your dashboard...", "success");
+      showStatus("Account created. Redirecting you home...", "success");
       setTimeout(() => {
-        window.location.href = "dashboard.html";
+        window.location.href = "index.html";
       }, 1000);
     } else {
       showStatus(signupResult.message, "success");
@@ -148,7 +148,7 @@ function handleGoogleCredentialResponse(response) {
         localStorage.setItem("zf_email", result.email);
         showStatus("Welcome back, " + result.fullName + ". Redirecting...", "success");
         setTimeout(() => {
-          window.location.href = "dashboard.html";
+          window.location.href = "index.html";
         }, 1000);
       }
     })

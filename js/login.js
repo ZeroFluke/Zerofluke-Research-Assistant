@@ -20,21 +20,21 @@ function callBackend(payload) {
   }).then((res) => res.json());
 }
 
-function saveSessionAndGoToDashboard(clientId, fullName, email, welcomeMessage) {
+function saveSessionAndGoHome(clientId, fullName, email, welcomeMessage) {
   localStorage.setItem("zf_clientId", clientId);
   localStorage.setItem("zf_fullName", fullName);
   localStorage.setItem("zf_email", email);
   showStatus(welcomeMessage, "success");
   setTimeout(() => {
-    window.location.href = "dashboard.html";
+    window.location.href = "index.html";
   }, 800);
 }
 
 // If someone's already logged in and lands back on the login page, just
-// send them straight to the dashboard instead of asking them to log in again.
+// send them home instead of asking them to log in again.
 window.addEventListener("DOMContentLoaded", function () {
   if (localStorage.getItem("zf_clientId")) {
-    window.location.href = "dashboard.html";
+    window.location.href = "index.html";
   }
 });
 
@@ -56,7 +56,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     submitBtn.textContent = "Log In";
 
     if (result.success) {
-      saveSessionAndGoToDashboard(result.clientId, result.fullName, email, "Welcome back, " + result.fullName + ". Redirecting...");
+      saveSessionAndGoHome(result.clientId, result.fullName, email, "Welcome back, " + result.fullName + ". Redirecting...");
     } else {
       showStatus(result.error, "error");
       // handleLogin returns this exact message for both a wrong password and an
@@ -92,7 +92,7 @@ function handleGoogleCredentialResponse(response) {
           "info"
         );
       } else {
-        saveSessionAndGoToDashboard(result.clientId, result.fullName, result.email, "Welcome back, " + result.fullName + ". Redirecting...");
+        saveSessionAndGoHome(result.clientId, result.fullName, result.email, "Welcome back, " + result.fullName + ". Redirecting...");
       }
     })
     .catch((err) => {

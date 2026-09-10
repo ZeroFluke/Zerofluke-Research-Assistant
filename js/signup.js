@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     phoneIti = window.intlTelInput(phoneInput, {
       initialCountry: "ng",
       separateDialCode: true,
-      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js"
+      utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
     });
   }
 });

@@ -191,11 +191,12 @@ function buildOrderCardHtml(order) {
       '<button class="btn btn-ghost" data-action="cancel" style="color:var(--danger);border-color:var(--line);">Cancel Request</button>' +
       '</div>';
   } else if (order.orderStatus === "Ongoing") {
-    const workReady = balanceOutstanding && (order.finalWordFileLink || order.finalPdfFileLink);
+    const hasFinalFile = !!(order.finalWordFileLink || order.finalPdfFileLink);
+    const workReadyBanner = balanceOutstanding
+      ? '<div class="work-ready-banner"><p><strong>Your work is ready.</strong> Please settle your outstanding balance below to complete this order and receive your files.</p></div>'
+      : '<div class="work-ready-banner"><p><strong>Your work is ready.</strong> Click "Order Completed?" below to close out this order and download your files.</p></div>';
     actionsHtml =
-      (workReady
-        ? '<div class="work-ready-banner"><p><strong>Your work is ready.</strong> Please settle your outstanding balance below to complete this order and receive your files.</p></div>'
-        : "") +
+      (hasFinalFile ? workReadyBanner : "") +
       (balanceOutstanding
         ? '<div class="order-actions"><button class="btn btn-primary" data-action="pay" data-type="Balance-30">Pay Balance (30%)</button></div>'
         : "") +

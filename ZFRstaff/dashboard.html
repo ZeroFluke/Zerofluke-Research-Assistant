@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Dashboard | ZeroFluke Research Assistant</title>
+<link rel="icon" href="../assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .admin-shell { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+  .admin-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 1rem; margin-bottom: 1.5rem; border-bottom: 1.5px solid var(--line);
+  }
+  .admin-topbar .who { font-weight: 700; color: var(--deep-navy); }
+  .admin-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .admin-tab {
+    padding: 0.55rem 1.1rem; border-radius: 999px; border: 1.5px solid var(--line);
+    background: var(--paper); cursor: pointer; font-weight: 600; font-size: 0.9rem;
+  }
+  .admin-tab.active { background: var(--royal-blue); color: #fff; border-color: var(--royal-blue); }
+  .admin-panel { display: none; }
+  .admin-panel.active { display: block; }
+  .admin-row {
+    border: 1.5px solid var(--line); border-radius: var(--radius-m);
+    padding: 1rem 1.2rem; margin-bottom: 0.9rem; background: var(--paper);
+  }
+  .admin-row-top { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .admin-row-title { font-weight: 700; color: var(--deep-navy); }
+  .admin-row-meta { font-size: 0.82rem; color: var(--ink-soft); }
+  .admin-row-controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.6rem; }
+  .admin-row-controls select, .admin-row-controls input[type="file"] { font-size: 0.85rem; }
+  .admin-empty { color: var(--ink-soft); font-size: 0.9rem; padding: 1rem 0; }
+  .pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: var(--sky-blue-pale); color: var(--deep-navy); }
+  .pill.resolved { background: #eaf6ef; color: var(--success); }
+</style>
+</head>
+<body data-page="admin-dashboard" style="background:var(--paper-dim);">
+
+<div class="admin-shell">
+  <div class="admin-topbar">
+    <div>
+      <div style="font-weight:700;">ZeroFluke Staff Dashboard</div>
+      <div class="who" id="whoLabel"></div>
+    </div>
+    <button class="btn btn-outline-dark" id="logoutBtn">Log Out</button>
+  </div>
+
+  <div id="statusBox" class="status-box"></div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-tab="orders">Orders</button>
+    <button class="admin-tab" data-tab="checkOrders">Check Orders</button>
+    <button class="admin-tab" data-tab="complaints">Complaints</button>
+    <button class="admin-tab" data-tab="staff" id="staffTabBtn" style="display:none;">Staff</button>
+  </div>
+
+  <div class="admin-panel active" id="panel-orders">
+    <div id="ordersList"><p class="admin-empty">Loading...</p></div>
+  </div>
+
+  <div class="admin-panel" id="panel-checkOrders">
+    <div id="checkOrdersList"><p class="admin-empty">Loading...</p></div>
+  </div>
+
+  <div class="admin-panel" id="panel-complaints">
+    <div id="complaintsList"><p class="admin-empty">Loading...</p></div>
+  </div>
+
+  <div class="admin-panel" id="panel-staff">
+    <div class="admin-row" style="margin-bottom:1.5rem;">
+      <div class="admin-row-title" style="margin-bottom:0.75rem;">Invite Staff</div>
+      <form id="inviteForm" style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:flex-end;">
+        <div class="field" style="flex:1;min-width:160px;margin-bottom:0;">
+          <label for="inv-name">Full name</label>
+          <input type="text" id="inv-name" required>
+        </div>
+        <div class="field" style="flex:1;min-width:200px;margin-bottom:0;">
+          <label for="inv-email">Email</label>
+          <input type="email" id="inv-email" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="inviteBtn">Send Invite</button>
+      </form>
+    </div>
+    <div id="staffList"><p class="admin-empty">Loading...</p></div>
+  </div>
+</div>
+
+<script src="../js/main.js"></script>
+<script src="../js/admin-dashboard.js"></script>
+</body>
+</html>

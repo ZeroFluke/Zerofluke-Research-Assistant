@@ -104,26 +104,25 @@ function renderTab(tab) {
 // ---------- Load everything once, in parallel ----------
 
 async function loadAll() {
-  const calls = [
-    adminCall("adminGetAllOrders"),
-    adminCall("adminGetAllCheckOrders"),
-    adminCall("adminGetComplaints")
-  ];
+  try {
+    const ordersResult = await adminCall("adminGetAllOrders");
+    if (ordersResult.success) data.orders = ordersResult.orders;
 
-  if (role === "owner") {
-    calls.push(adminCall("adminGetStaff"));
-    calls.push(adminCall("adminGetActivityLog"));
-  }
+    const checkResult = await adminCall("adminGetAllCheckOrders");
+    if (checkResult.success) data.checkOrders = checkResult.checkOrders;
 
-  const results = await Promise.all(calls);
+    const complaintsResult = await adminCall("adminGetComplaints");
+    if (complaintsResult.success) data.complaints = complaintsResult.complaints;
 
-  if (results[0].success) data.orders = results[0].orders;
-  if (results[1].success) data.checkOrders = results[1].checkOrders;
-  if (results[2].success) data.complaints = results[2].complaints;
+    if (role === "owner") {
+      const staffResult = await adminCall("adminGetStaff");
+      if (staffResult.success) data.staff = staffResult.staff;
 
-  if (role === "owner") {
-    if (results[3].success) data.staff = results[3].staff;
-    if (results[4].success) data.activityLog = results[4].log;
+      const logResult = await adminCall("adminGetActivityLog");
+      if (logResult.success) data.activityLog = logResult.log;
+    }
+  } catch (err) {
+    showStatus("Some data failed to load: " + err.message + ". Try Refresh All.", "error");
   }
 }
 

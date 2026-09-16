@@ -3,11 +3,16 @@ const BACKEND_URL = "https://script.google.com/macros/s/AKfycby9I_6Z9l52yG1_GPNv
 const role = localStorage.getItem("zfa_role");
 const staffId = localStorage.getItem("zfa_staffId");
 const sessionToken = localStorage.getItem("zfa_sessionToken");
-const fullName = localStorage.getItem("zfa_fullName");
 
 if (!role || !sessionToken) {
   window.location.href = "login.html";
 }
+
+const ORDER_STATUSES = ["Request Pending", "Ongoing", "Completed", "Cancelled"];
+const CHECK_STATUSES = ["Requested", "Paid", "Ongoing", "Report Ready", "Completed"];
+const SPECIAL_LEVELS = ["Proofreading", "Literature Review"];
+
+const data = { orders: [], checkOrders: [], complaints: [], staff: [], activityLog: [] };
 
 function showStatus(message, type) {
   const box = document.getElementById("statusBox");
@@ -55,7 +60,17 @@ document.getElementById("logoutBtn").addEventListener("click", function () {
 
 if (role === "owner") {
   document.getElementById("staffTabBtn").style.display = "inline-block";
+  document.getElementById("activityLogTabBtn").style.display = "inline-block";
+} else {
+  document.getElementById("changePasswordBtn").style.display = "inline-block";
 }
+
+document.getElementById("refreshAllBtn").addEventListener("click", async function () {
+  showStatus("Refreshing...", "info");
+  await loadAll();
+  renderActiveTab();
+  showStatus("Up to date.", "success");
+});
 
 // ---------- Tabs ----------
 
@@ -65,46 +80,88 @@ document.querySelectorAll(".admin-tab").forEach((btn) => {
     document.querySelectorAll(".admin-panel").forEach((p) => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
-
-    if (btn.dataset.tab === "orders") loadOrders();
-    if (btn.dataset.tab === "checkOrders") loadCheckOrders();
-    if (btn.dataset.tab === "complaints") loadComplaints();
-    if (btn.dataset.tab === "staff") loadStaff();
+    renderTab(btn.dataset.tab);
   });
 });
 
+function activeTabName() {
+  const active = document.querySelector(".admin-tab.active");
+  return active ? active.dataset.tab : "orders";
+}
+
+function renderActiveTab() {
+  renderTab(activeTabName());
+}
+
+function renderTab(tab) {
+  if (tab === "orders") renderOrders(data.orders);
+  if (tab === "checkOrders") renderCheckOrders(data.checkOrders);
+  if (tab === "complaints") renderComplaints(data.complaints);
+  if (tab === "staff") renderStaff(data.staff);
+  if (tab === "activityLog") renderActivityLog(data.activityLog);
+}
+
+// ---------- Load everything once, in parallel ----------
+
+async function loadAll() {
+  const calls = [
+    adminCall("adminGetAllOrders"),
+    adminCall("adminGetAllCheckOrders"),
+    adminCall("adminGetComplaints")
+  ];
+
+  if (role === "owner") {
+    calls.push(adminCall("adminGetStaff"));
+    calls.push(adminCall("adminGetActivityLog"));
+  }
+
+  const results = await Promise.all(calls);
+
+  if (results[0].success) data.orders = results[0].orders;
+  if (results[1].success) data.checkOrders = results[1].checkOrders;
+  if (results[2].success) data.complaints = results[2].complaints;
+
+  if (role === "owner") {
+    if (results[3].success) data.staff = results[3].staff;
+    if (results[4].success) data.activityLog = results[4].log;
+  }
+}
+
 // ---------- Orders ----------
 
-const ORDER_STATUSES = ["Request Pending", "Ongoing", "Completed", "Cancelled"];
-
-async function loadOrders() {
+function renderOrders(orders) {
   const container = document.getElementById("ordersList");
-  container.innerHTML = '<p class="admin-empty">Loading...</p>';
 
-  const result = await adminCall("adminGetAllOrders");
-  if (!result.success) {
-    container.innerHTML = '<p class="admin-empty">' + result.error + "</p>";
-    return;
-  }
-  if (result.orders.length === 0) {
+  if (orders.length === 0) {
     container.innerHTML = '<p class="admin-empty">No orders yet.</p>';
     return;
   }
 
-  container.innerHTML = result.orders.map((o) => {
+  container.innerHTML = orders.map((o) => {
     const statusOptions = ORDER_STATUSES.map((s) =>
       '<option value="' + s + '"' + (s === o.orderStatus ? " selected" : "") + ">" + s + "</option>"
     ).join("");
+
+    const isSpecial = SPECIAL_LEVELS.indexOf(o.academicLevel) !== -1;
+    let specialLine = "";
+    if (o.academicLevel === "Proofreading") {
+      specialLine = '<div class="admin-row-meta">Pages: ' + (o.specialOrderQuantity || "—") +
+        (o.specialOrderDocumentLink ? ' · <a href="' + o.specialOrderDocumentLink + '" target="_blank">View submitted document</a>' : "") + "</div>";
+    } else if (o.academicLevel === "Literature Review") {
+      specialLine = '<div class="admin-row-meta">Works to review: ' + (o.specialOrderQuantity || "—") +
+        " · For: " + (o.literatureReviewFor || "—") + "</div>";
+    }
 
     return (
       '<div class="admin-row" data-order-id="' + o.orderId + '">' +
         '<div class="admin-row-top">' +
           '<div>' +
-            '<div class="admin-row-title">' + o.topic + "</div>" +
-            '<div class="admin-row-meta">' + o.clientName + " (" + o.clientEmail + ") — " + o.academicLevel + "</div>" +
+            '<div class="admin-row-title">' + o.topic + (isSpecial ? ' <span class="pill">' + o.academicLevel + "</span>" : "") + "</div>" +
+            '<div class="admin-row-meta">' + o.clientName + " (" + o.clientEmail + ")" + (isSpecial ? "" : " — " + o.academicLevel) + "</div>" +
           "</div>" +
           '<span class="pill">' + o.orderStatus + "</span>" +
         "</div>" +
+        specialLine +
         '<div class="admin-row-meta">Paid ' + (o.amountPaidSoFar || 0) + " / " + o.totalPrice + " · Revisits " + o.revisitsUsed + "/" + o.revisitsPurchased + " · Last updated by " + (o.lastUpdatedBy || "—") + "</div>" +
         '<div class="admin-row-controls">' +
           '<select class="status-select">' + statusOptions + "</select>" +
@@ -123,7 +180,7 @@ async function loadOrders() {
       const newStatus = row.querySelector(".status-select").value;
       const result = await adminCall("adminUpdateOrder", { orderId: orderId, newStatus: newStatus });
       showStatus(result.success ? "Status updated." : result.error, result.success ? "success" : "error");
-      if (result.success) loadOrders();
+      if (result.success) await refreshOrders();
     });
 
     row.querySelector(".file-word").addEventListener("change", async (e) => {
@@ -133,6 +190,14 @@ async function loadOrders() {
       await uploadOrderFile(orderId, e.target.files[0], "finalPdf");
     });
   });
+}
+
+async function refreshOrders() {
+  const result = await adminCall("adminGetAllOrders");
+  if (result.success) {
+    data.orders = result.orders;
+    renderOrders(data.orders);
+  }
 }
 
 async function uploadOrderFile(orderId, file, slot) {
@@ -149,7 +214,7 @@ async function uploadOrderFile(orderId, file, slot) {
       base64Data: base64Data
     });
     showStatus(result.success ? "File delivered to client." : result.error, result.success ? "success" : "error");
-    if (result.success) loadOrders();
+    if (result.success) await refreshOrders();
   } catch (err) {
     showStatus("Upload failed: " + err.message, "error");
   }
@@ -157,23 +222,15 @@ async function uploadOrderFile(orderId, file, slot) {
 
 // ---------- Check Orders ----------
 
-const CHECK_STATUSES = ["Requested", "Paid", "Ongoing", "Report Ready", "Completed"];
-
-async function loadCheckOrders() {
+function renderCheckOrders(checkOrders) {
   const container = document.getElementById("checkOrdersList");
-  container.innerHTML = '<p class="admin-empty">Loading...</p>';
 
-  const result = await adminCall("adminGetAllCheckOrders");
-  if (!result.success) {
-    container.innerHTML = '<p class="admin-empty">' + result.error + "</p>";
-    return;
-  }
-  if (result.checkOrders.length === 0) {
+  if (checkOrders.length === 0) {
     container.innerHTML = '<p class="admin-empty">No check orders yet.</p>';
     return;
   }
 
-  container.innerHTML = result.checkOrders.map((c) => {
+  container.innerHTML = checkOrders.map((c) => {
     const statusOptions = CHECK_STATUSES.map((s) =>
       '<option value="' + s + '"' + (s === c.orderStatus ? " selected" : "") + ">" + s + "</option>"
     ).join("");
@@ -207,7 +264,7 @@ async function loadCheckOrders() {
       const newStatus = row.querySelector(".status-select").value;
       const result = await adminCall("adminUpdateCheckOrder", { checkId: checkId, newStatus: newStatus });
       showStatus(result.success ? "Status updated." : result.error, result.success ? "success" : "error");
-      if (result.success) loadCheckOrders();
+      if (result.success) await refreshCheckOrders();
     });
 
     const fileInput = row.querySelector(".file-report");
@@ -227,7 +284,7 @@ async function loadCheckOrders() {
             base64Data: base64Data
           });
           showStatus(result.success ? "Report delivered, status set to Report Ready." : result.error, result.success ? "success" : "error");
-          if (result.success) loadCheckOrders();
+          if (result.success) await refreshCheckOrders();
         } catch (err) {
           showStatus("Upload failed: " + err.message, "error");
         }
@@ -236,23 +293,25 @@ async function loadCheckOrders() {
   });
 }
 
+async function refreshCheckOrders() {
+  const result = await adminCall("adminGetAllCheckOrders");
+  if (result.success) {
+    data.checkOrders = result.checkOrders;
+    renderCheckOrders(data.checkOrders);
+  }
+}
+
 // ---------- Complaints ----------
 
-async function loadComplaints() {
+function renderComplaints(complaints) {
   const container = document.getElementById("complaintsList");
-  container.innerHTML = '<p class="admin-empty">Loading...</p>';
 
-  const result = await adminCall("adminGetComplaints");
-  if (!result.success) {
-    container.innerHTML = '<p class="admin-empty">' + result.error + "</p>";
-    return;
-  }
-  if (result.complaints.length === 0) {
+  if (complaints.length === 0) {
     container.innerHTML = '<p class="admin-empty">No complaints yet.</p>';
     return;
   }
 
-  const sorted = result.complaints.slice().reverse(); // newest first
+  const sorted = complaints.slice().reverse();
 
   container.innerHTML = sorted.map((c) => {
     const isResolved = c.resolved === true || c.resolved === "TRUE";
@@ -278,29 +337,28 @@ async function loadComplaints() {
       const complaintId = this.closest(".admin-row").dataset.complaintId;
       const result = await adminCall("adminResolveComplaint", { complaintId: complaintId });
       showStatus(result.success ? "Complaint resolved." : result.error, result.success ? "success" : "error");
-      if (result.success) loadComplaints();
+      if (result.success) {
+        const r = await adminCall("adminGetComplaints");
+        if (r.success) {
+          data.complaints = r.complaints;
+          renderComplaints(data.complaints);
+        }
+      }
     });
   });
 }
 
 // ---------- Staff (owner only) ----------
 
-async function loadStaff() {
-  if (role !== "owner") return;
+function renderStaff(staff) {
   const container = document.getElementById("staffList");
-  container.innerHTML = '<p class="admin-empty">Loading...</p>';
 
-  const result = await adminCall("adminGetStaff");
-  if (!result.success) {
-    container.innerHTML = '<p class="admin-empty">' + result.error + "</p>";
-    return;
-  }
-  if (result.staff.length === 0) {
+  if (staff.length === 0) {
     container.innerHTML = '<p class="admin-empty">No staff invited yet.</p>';
     return;
   }
 
-  container.innerHTML = result.staff.map((s) =>
+  container.innerHTML = staff.map((s) =>
     '<div class="admin-row">' +
       '<div class="admin-row-top">' +
         '<div>' +
@@ -331,12 +389,82 @@ document.getElementById("inviteForm").addEventListener("submit", async function 
   if (result.success) {
     showStatus("Invite sent — Staff ID " + result.staffId, "success");
     document.getElementById("inviteForm").reset();
-    loadStaff();
+    const r = await adminCall("adminGetStaff");
+    if (r.success) {
+      data.staff = r.staff;
+      renderStaff(data.staff);
+    }
   } else {
     showStatus(result.error, "error");
   }
 });
 
+// ---------- Activity Log (owner only) ----------
+
+function renderActivityLog(log) {
+  const container = document.getElementById("activityLogList");
+
+  if (log.length === 0) {
+    container.innerHTML = '<p class="admin-empty">No activity recorded yet.</p>';
+    return;
+  }
+
+  const sorted = log.slice().reverse();
+
+  container.innerHTML = sorted.map((entry) =>
+    '<div class="admin-row">' +
+      '<div class="admin-row-top">' +
+        '<div>' +
+          '<div class="admin-row-title">' + entry.staffId + '</div>' +
+          '<div class="admin-row-meta">' + entry.action + "</div>" +
+        "</div>" +
+        '<span class="admin-row-meta">' + formatDate(entry.timestamp) + "</span>" +
+      "</div>" +
+      (entry.refId ? '<div class="admin-row-meta">Ref: ' + entry.refId + "</div>" : "") +
+    "</div>"
+  ).join("");
+}
+
+// ---------- Change Password (staff only) ----------
+
+const cpModal = document.getElementById("changePasswordModal");
+
+function showCpStatus(message, type) {
+  const box = document.getElementById("cpStatusBox");
+  box.textContent = message;
+  box.className = "status-box show status-" + type;
+}
+
+if (document.getElementById("changePasswordBtn")) {
+  document.getElementById("changePasswordBtn").addEventListener("click", () => {
+    document.getElementById("changePasswordForm").reset();
+    document.getElementById("cpStatusBox").className = "status-box";
+    cpModal.classList.add("open");
+  });
+}
+
+document.getElementById("cpCancelBtn").addEventListener("click", () => {
+  cpModal.classList.remove("open");
+});
+
+document.getElementById("changePasswordForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const currentPassword = document.getElementById("cp-current").value;
+  const newPassword = document.getElementById("cp-new").value;
+
+  const result = await adminCall("staffChangePassword", { currentPassword: currentPassword, newPassword: newPassword });
+
+  if (result.success) {
+    showCpStatus("Password updated.", "success");
+    setTimeout(() => { cpModal.classList.remove("open"); }, 1200);
+  } else {
+    showCpStatus(result.error, "error");
+  }
+});
+
 // ---------- Initial load ----------
 
-loadOrders();
+(async function init() {
+  await loadAll();
+  renderActiveTab();
+})();

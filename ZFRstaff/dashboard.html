@@ -45,7 +45,11 @@
       <div style="font-weight:700;">ZeroFluke Staff Dashboard</div>
       <div class="who" id="whoLabel"></div>
     </div>
-    <button class="btn btn-outline-dark" id="logoutBtn">Log Out</button>
+    <div style="display:flex;gap:0.6rem;">
+      <button class="btn btn-outline-dark" id="refreshAllBtn">Refresh All</button>
+      <button class="btn btn-outline-dark" id="changePasswordBtn" style="display:none;">Change Password</button>
+      <button class="btn btn-outline-dark" id="logoutBtn">Log Out</button>
+    </div>
   </div>
 
   <div id="statusBox" class="status-box"></div>
@@ -55,6 +59,7 @@
     <button class="admin-tab" data-tab="checkOrders">Check Orders</button>
     <button class="admin-tab" data-tab="complaints">Complaints</button>
     <button class="admin-tab" data-tab="staff" id="staffTabBtn" style="display:none;">Staff</button>
+    <button class="admin-tab" data-tab="activityLog" id="activityLogTabBtn" style="display:none;">Activity Log</button>
   </div>
 
   <div class="admin-panel active" id="panel-orders">
@@ -85,6 +90,32 @@
       </form>
     </div>
     <div id="staffList"><p class="admin-empty">Loading...</p></div>
+  </div>
+
+  <div class="admin-panel" id="panel-activityLog">
+    <div id="activityLogList"><p class="admin-empty">Loading...</p></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal-card">
+    <h3 style="margin-top:0;">Change Password</h3>
+    <div id="cpStatusBox" class="status-box"></div>
+    <form id="changePasswordForm">
+      <div class="field">
+        <label for="cp-current">Current password</label>
+        <input type="password" id="cp-current" required>
+      </div>
+      <div class="field">
+        <label for="cp-new">New password</label>
+        <input type="password" id="cp-new" required minlength="8">
+        <p class="field-hint">At least 8 characters, with a letter and a number.</p>
+      </div>
+      <div class="order-actions" style="margin-top:1.25rem;">
+        <button type="button" class="btn btn-outline-dark" id="cpCancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Password</button>
+      </div>
+    </form>
   </div>
 </div>
 
